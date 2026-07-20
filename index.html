@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<!--
+  PURAMENTE DANZA 2026 — Portal de inicio
+  ----------------------------------------------------------------------
+  Página de entrada: acá van todas las tarjetas/botones hacia cada
+  sección del evento. El formulario de inscripción (inscripciones.html)
+  es UNA de esas tarjetas, no esta página.
+
+  ARCHIVOS QUE NECESITA ESTA PÁGINA (carpeta "assets" al lado de este
+  archivo — ya la tenés subida):
+    assets/logo-puramente.png
+    assets/boton-inscripciones-competencia.jpg
+    assets/boton-inscripciones-workshop.jpg
+    assets/boton-reglamento.jpg
+    assets/boton-orden-participacion.jpg
+    assets/boton-devoluciones.jpg
+    assets/boton-fotos.jpg
+  (assets/fondo-portal.jpg ya no se usa en esta versión — se puede dejar
+  ahí sin problema, o borrarlo, da igual.)
+
+  CÓMO AGREGAR O CAMBIAR UN LINK
+  ----------------------------------------------------------------------
+  Todo el contenido de las tarjetas vive en el array SECCIONES, más abajo
+  en el <script>. Para activar una tarjeta que todavía dice "Próximamente":
+    1. Buscá su objeto en SECCIONES (por el "titulo").
+    2. Completá "href" con el link real.
+    3. Cambiá "disponible: false" por "disponible: true".
+    4. (Opcional) cambiá "subtitulo" por algo más específico.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puramente Danza 2026 — Portal</title>
+<style>
+  :root {
+    --morado: #7B2FBE;
+    --morado-oscuro: #4E1D7F;
+    --marfil: #FBF8FF;
+    --texto: #2B2432;
+    --texto-suave: #6E6079;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--marfil);
+    color: var(--texto);
+  }
+
+  /* ---------- Header: logo + bienvenida sobre fondo claro ---------- */
+  .encabezado {
+    position: relative;
+    overflow: hidden;
+    padding: 40px 24px 56px;
+    text-align: center;
+    background: linear-gradient(160deg, #F4EEFC 0%, #EDE3F9 55%, #E2D3F4 100%);
+  }
+  .encabezado::before,
+  .encabezado::after {
+    content: '';
+    position: absolute;
+    width: 60px; height: 60px;
+    border: 2px solid rgba(123, 47, 190, 0.28);
+    transform: rotate(20deg);
+  }
+  .encabezado::before { top: 18%; left: 6%; }
+  .encabezado::after {
+    top: 14%; right: 8%;
+    border: none;
+    background: rgba(123, 47, 190, 0.35);
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+  .marca img {
+    position: relative;
+    z-index: 1;
+    width: min(230px, 58vw);
+    height: auto;
+  }
+  .titulo-bienvenida {
+    position: relative;
+    z-index: 1;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--morado);
+    margin: 18px 0 0;
+    line-height: 1.3;
+  }
+  .bienvenida {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 10px auto 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--texto-suave);
+  }
+
+  /* ---------- Grilla de secciones ---------- */
+  .grilla {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px 16px;
+    max-width: 760px;
+    margin: -18px auto 0;
+    padding: 0 18px 8px;
+  }
+  @media (min-width: 620px) {
+    .grilla { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 920px) {
+    .grilla { grid-template-columns: repeat(4, 1fr); max-width: 1040px; }
+  }
+
+  .tarjeta {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+  .tarjeta-imagen {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 18px rgba(53, 19, 79, 0.18);
+    background: var(--morado-oscuro);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .tarjeta.disponible:hover .tarjeta-imagen,
+  .tarjeta.disponible:focus-visible .tarjeta-imagen {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 24px rgba(53, 19, 79, 0.28);
+  }
+  .tarjeta:focus-visible { outline: 2px solid var(--morado); outline-offset: 3px; }
+  .tarjeta-imagen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .tarjeta.proxima .tarjeta-imagen img {
+    filter: grayscale(40%) brightness(0.88);
+  }
+  .tarjeta-titulo {
+    margin: 10px 0 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texto);
+    line-height: 1.25;
+  }
+  .tarjeta-subtitulo {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--texto-suave);
+  }
+  .tarjeta.proxima .tarjeta-subtitulo {
+    color: var(--morado);
+    font-weight: 600;
+  }
+
+  .boton-whatsapp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 760px;
+    margin: 20px auto 0;
+    padding: 13px;
+    background: #25D366;
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 10px;
+  }
+  @media (min-width: 620px) { .boton-whatsapp { max-width: 400px; } }
+
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--texto-suave);
+    padding: 18px 20px 40px;
+  }
+  footer a { color: var(--morado); font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="marca">
+      <img src="assets/logo-puramente.png" alt="Puramente Danza">
+    </div>
+    <p class="titulo-bienvenida">¡Bienvenidos a Puramente Danza!</p>
+    <p class="bienvenida">
+      Desde acá accedés a todo lo del evento: inscripciones, reglamento, orden de
+      participación, devoluciones del jurado, fotos y las novedades oficiales.
+    </p>
+  </header>
+
+  <main class="grilla" id="grilla" aria-label="Secciones del evento"></main>
+
+  <a class="boton-whatsapp" href="https://wa.me/595994445463" target="_blank" rel="noopener">
+    Consultas por WhatsApp
+  </a>
+
+  <footer>
+    puramentedanza@gmail.com · Instagram @puramentedanza
+  </footer>
+
+<script>
+  // ---------- Secciones del portal ----------
+  // "disponible: false" muestra la tarjeta apagada con "Próximamente" como subtítulo.
+  // Para activarla: completá "href", poné "disponible: true" y ajustá "subtitulo".
+  const SECCIONES = [
+    {
+      titulo: 'Inscripciones Competencia',
+      subtitulo: 'Formulario',
+      imagen: 'assets/boton-inscripciones-competencia.jpg',
+      href: 'inscripciones.html',
+      disponible: true,
+    },
+    {
+      titulo: 'Inscripciones Workshops',
+      subtitulo: 'Próximamente',
+      imagen: 'assets/boton-inscripciones-workshop.jpg',
+      href: '',
+      disponible: false,
+    },
+    {
+      titulo: 'Reglamento',
+      subtitulo: 'Edición 2026',
+      imagen: 'assets/boton-reglamento.jpg',
+      href: 'https://drive.google.com/file/d/1uvSZQKz3zTl86dU8nqM8RjnDSQ6z7erl/view?usp=sharing',
+      disponible: true,
+    },
+    {
+      titulo: 'Orden de participación',
+      subtitulo: 'Próximamente',
+      imagen: 'assets/boton-orden-participacion.jpg',
+      href: '',
+      disponible: false,
+    },
+    {
+      titulo: 'Portal de devoluciones',
+      subtitulo: 'Próximamente',
+      imagen: 'assets/boton-devoluciones.jpg',
+      href: '',
+      disponible: false,
+    },
+    {
+      titulo: 'Fotos',
+      subtitulo: 'Próximamente',
+      imagen: 'assets/boton-fotos.jpg',
+      href: '',
+      disponible: false,
+    },
+  ];
+
+  function crearTarjeta(seccion) {
+    const disponible = seccion.disponible && seccion.href;
+    const tag = disponible ? 'a' : 'div';
+    const el = document.createElement(tag);
+    el.className = `tarjeta ${disponible ? 'disponible' : 'proxima'}`;
+    if (disponible) {
+      el.href = seccion.href;
+      if (seccion.href.startsWith('http')) {
+        el.target = '_blank';
+        el.rel = 'noopener';
+      }
+    } else {
+      el.setAttribute('role', 'note');
+      el.setAttribute('aria-disabled', 'true');
+    }
+
+    el.innerHTML = `
+      <div class="tarjeta-imagen">
+        <img src="${seccion.imagen}" alt="${seccion.titulo}" loading="lazy">
+      </div>
+      <p class="tarjeta-titulo">${seccion.titulo}</p>
+      <p class="tarjeta-subtitulo">${seccion.subtitulo}</p>
+    `;
+    return el;
+  }
+
+  const grilla = document.getElementById('grilla');
+  SECCIONES.forEach(seccion => grilla.appendChild(crearTarjeta(seccion)));
+</script>
+
+</body>
+</html>
