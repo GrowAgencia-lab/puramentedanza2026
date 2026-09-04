@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Puramente Danza 2026 — Portal de Jurado</title>
+<link rel="icon" href="assets/iconos/favicon.ico" sizes="any">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
+<style>
+  :root{
+    --p: #8717BB;
+    --p2: #AC17B1;
+    --bg: #FBF8FF;
+    --bg-elev: #FFFFFF;
+    --texto: #2B2432;
+    --muted: #6E6079;
+    --borde: #E4DAF0;
+    --ok: #1e8a5f;
+    --ok-bg: #dff5ea;
+    --warn: #b8720b;
+    --warn-bg: #fbead0;
+    --err: #c62855;
+    --err-bg: #fbdde6;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--texto);
+    font-family:'Segoe UI', Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+
+  header{padding:16px 20px 14px;border-bottom:1px solid var(--borde);position:sticky;top:0;
+    background:linear-gradient(120deg,var(--p),var(--p2));z-index:10;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand img{height:44px;display:block;filter:brightness(0) invert(1);}
+  .brand-text{color:#fff;}
+  .brand-text .t1{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:.9;}
+  .brand-text .t2{font-size:15px;font-weight:700;}
+
+  .lock-badge{margin-top:12px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);
+    border-radius:12px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    color:#fff;font-size:12.5px;}
+  .lock-badge b{font-weight:700;}
+  .lock-badge button{background:none;border:none;color:#fff;text-decoration:underline;font-size:11.5px;
+    cursor:pointer;padding:0;white-space:nowrap;opacity:.9;}
+
+  main{flex:1;padding:20px;padding-bottom:200px;}
+
+  .setup-card{background:var(--bg-elev);border:1px solid var(--borde);border-radius:var(--radius);
+    padding:22px;margin-top:10px;}
+  .setup-card h2{margin:0 0 6px;font-size:17px;color:var(--p);}
+  .setup-card p.hint{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.5;}
+  .setup-field{margin-bottom:16px;}
+  .setup-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.6px;color:var(--muted);margin-bottom:6px;}
+  .setup-field select{width:100%;background:var(--bg);border:1.5px solid var(--borde);color:var(--texto);
+    border-radius:10px;padding:13px 12px;font-size:15px;}
+  .setup-field select:disabled{opacity:.5;}
+  .confirm-box{background:var(--bg);border:1.5px solid var(--p);border-radius:12px;padding:14px 16px;
+    margin-top:6px;margin-bottom:16px;font-size:13.5px;line-height:1.6;}
+  .confirm-box b{color:var(--p);}
+  .btn-primary{width:100%;background:linear-gradient(120deg,var(--p),var(--p2));color:#fff;border:none;
+    border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-primary:active{transform:scale(.98);}
+
+  .lookup{display:flex;gap:8px;margin-bottom:16px;}
+  .lookup input{flex:1;background:var(--bg-elev);border:1.5px solid var(--borde);color:var(--texto);
+    border-radius:12px;padding:14px 16px;font-size:20px;font-variant-numeric:tabular-nums;
+    text-align:center;letter-spacing:1px;}
+  .lookup input:focus{outline:none;border-color:var(--p);}
+  .lookup button{background:var(--p);color:#fff;border:none;border-radius:12px;
+    padding:0 20px;font-weight:700;font-size:14px;cursor:pointer;}
+
+  .hint{color:var(--muted);font-size:12.5px;line-height:1.5;margin-bottom:16px;}
+
+  .card{background:var(--bg-elev);border:1px solid var(--borde);border-radius:var(--radius);
+    padding:18px;margin-bottom:16px;}
+  .obra-title{font-size:20px;font-weight:700;color:var(--p);margin:0 0 4px;line-height:1.25;}
+  .obra-academia{font-size:12.5px;color:var(--muted);margin-bottom:14px;font-style:italic;}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:13px;}
+  .meta-grid .k{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;}
+  .meta-grid .v{color:var(--texto);font-weight:600;}
+  .participantes{margin-top:14px;padding-top:14px;border-top:1px solid var(--borde);font-size:13px;line-height:1.6;}
+  .participantes .k{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+
+  .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:22px 0 10px;}
+
+  .score-box{background:var(--bg-elev);border:1px solid var(--borde);border-radius:var(--radius);padding:20px;text-align:center;}
+  .score-value{font-size:48px;font-weight:700;color:var(--p);line-height:1;font-variant-numeric:tabular-nums;}
+  .score-picker{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:16px;}
+  .score-btn{aspect-ratio:1;border-radius:12px;border:1.5px solid var(--borde);background:var(--bg);
+    color:var(--texto);font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:all .12s;font-variant-numeric:tabular-nums;}
+  .score-btn.selected{border-color:var(--p);background:rgba(135,23,187,0.10);color:var(--p);
+    box-shadow:0 0 0 2px rgba(135,23,187,0.25) inset;}
+
+  .score-hint{margin-top:10px;padding:6px 16px;font-size:13px;color:var(--muted);}
+  .puesto-badge{display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:6px 16px;
+    border-radius:20px;font-size:13px;font-weight:700;}
+  .puesto-badge.oro{background:rgba(214,164,34,0.15);color:#a37c14;}
+  .puesto-badge.plata{background:rgba(150,150,160,0.15);color:#6f6f79;}
+  .puesto-badge.bronce{background:rgba(184,110,60,0.15);color:#8a5228;}
+  .puesto-badge.desierto{background:rgba(154,143,120,0.15);color:var(--muted);}
+  .puesto-badge .dot2{width:8px;height:8px;border-radius:50%;background:currentColor;}
+
+  .escala-label{margin-top:16px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);text-align:left;}
+  .escala-panel{margin-top:8px;border:1px solid var(--borde);border-radius:10px;overflow:hidden;}
+  .escala-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;
+    border-bottom:1px solid var(--borde);font-size:13px;text-align:left;}
+  .escala-row:last-child{border-bottom:none;}
+  .escala-row .nums{font-variant-numeric:tabular-nums;font-weight:700;}
+  .escala-row .chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+  .escala-row .chip.oro{background:rgba(214,164,34,0.15);color:#a37c14;}
+  .escala-row .chip.plata{background:rgba(150,150,160,0.15);color:#6f6f79;}
+  .escala-row .chip.bronce{background:rgba(184,110,60,0.15);color:#8a5228;}
+  .escala-row .chip.desierto{background:rgba(154,143,120,0.15);color:var(--muted);}
+
+  .coreo-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--p);
+    background:rgba(135,23,187,0.08);border:1px solid rgba(135,23,187,0.25);padding:4px 10px;border-radius:20px;margin-bottom:10px;}
+
+  .rec-box{background:var(--bg-elev);border:1px solid var(--borde);border-radius:var(--radius);padding:22px;text-align:center;}
+  .rec-timer{font-variant-numeric:tabular-nums;font-size:32px;margin-bottom:14px;}
+  .rec-btn{width:72px;height:72px;border-radius:50%;border:3px solid var(--p);background:transparent;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0 auto;transition:all .15s;}
+  .rec-btn .inner{width:24px;height:24px;border-radius:6px;background:var(--err);transition:all .15s;}
+  .rec-btn.recording{border-color:var(--err);}
+  .rec-btn.recording .inner{border-radius:50%;width:28px;height:28px;}
+  .rec-status{margin-top:12px;font-size:12.5px;color:var(--muted);}
+  .rec-status.live{color:var(--err);}
+  .rec-existing{margin-top:10px;font-size:12px;}
+  .rec-existing a{color:var(--p);font-weight:700;}
+
+  .premio-locked{background:var(--bg-elev);border:1px solid var(--borde);border-radius:12px;
+    padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.5;}
+  .premio-box select{width:100%;background:var(--bg-elev);border:1.5px solid var(--borde);color:var(--texto);
+    border-radius:10px;padding:13px 12px;font-size:14px;}
+  .premio-check{display:flex;align-items:center;gap:10px;background:var(--bg-elev);border:1.5px solid var(--borde);
+    border-radius:10px;padding:14px 16px;font-size:13.5px;line-height:1.4;cursor:pointer;}
+  .premio-check input{width:18px;height:18px;flex-shrink:0;accent-color:var(--p);cursor:pointer;}
+
+  .status-banner{border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.5;margin-top:16px;}
+  .status-banner.ok{background:var(--ok-bg);color:var(--ok);}
+  .status-banner.warn{background:var(--warn-bg);color:var(--warn);}
+  .status-banner.err{background:var(--err-bg);color:var(--err);}
+
+  .footer-actions{position:fixed;bottom:0;left:0;right:0;
+    background:linear-gradient(to top, var(--bg) 60%, transparent);padding:36px 20px 20px;}
+  .footer-inner{max-width:480px;margin:0 auto;}
+  .send-btn{width:100%;background:linear-gradient(120deg,var(--p),var(--p2));color:#fff;border:none;border-radius:14px;
+    box-shadow:0 4px 14px rgba(135,23,187,0.3);padding:16px;font-size:15px;font-weight:700;cursor:pointer;}
+  .send-btn:disabled{background:#cfc4d8;color:#8a7f92;box-shadow:none;cursor:not-allowed;}
+  .modify-note{text-align:center;color:var(--muted);font-size:11px;margin-top:9px;line-height:1.5;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:14px;}
+  .siguiente-link{display:block;text-align:center;margin-top:14px;color:var(--p);font-weight:700;
+    font-size:13px;cursor:pointer;background:none;border:none;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <img src="assets/logo-puramente.png" alt="Puramente Danza">
+      <div class="brand-text">
+        <div class="t1">Puramente Danza 2026</div>
+        <div class="t2">Portal de Jurado</div>
+      </div>
+    </div>
+    <div id="lockBadgeWrap"></div>
+  </header>
+
+  <main id="mainArea"></main>
+
+  <div class="footer-actions" id="footerActions" style="display:none;">
+    <div class="footer-inner">
+      <button class="send-btn" id="sendBtn">Enviar calificación</button>
+      <div class="modify-note" id="modifyNote"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+// OJO: este portal usa un proyecto de Apps Script APARTE del resto del
+// sitio (Code_Jurado.gs, planilla "JURADO PURAMENTE DANZA 2026") — no el
+// mismo link que index.html/admin/orden.html/mis-inscripciones.html.
+// Reemplazar por el link de la implementación de Code_Jurado.gs en
+// cuanto Rebeca lo despliegue y lo mande.
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyks-M48ngn0Vhrhmyx_GgcNU5EAdId9ZTLUbHvAO2LXuZmCW_p0n8pRapccx_aKfq6Iw/exec';
+
+// Misma lista que valida el servidor — se usa acá solo para armar el
+// desplegable al instante; quien manda de verdad es Code.gs.
+const JURADOS_POR_DIA = {
+  'Sábado': ['Maia Ayala', 'Renan Banov', 'Rossana Orue', 'Patricia Mareco'],
+  'Domingo': ['Rossana Orue', 'Diana Paniagua', 'Claudia Ramos', 'Liz Mora'],
+};
+
+const LOCK_KEY = 'puramente_jurado_lock_2026';
+
+const el = id => document.getElementById(id);
+
+/* ===================== ESTADO ===================== */
+let lock = null; // {dia, jurado}
+let obrasDelDia = [];
+let currentObra = null;
+let currentScore = null;
+let currentScoreCoreo = null;
+let currentPremio = false; // ahora es un check (postula / no postula), no un texto elegido de una lista
+let audioMp3Blob = null;
+let audioUrlExistente = '';
+let yaEnviado = false;
+let mediaRecorder, audioChunks = [], recordStartTime, recordTimerInterval;
+
+/* ===================== Escala / puesto ===================== */
+function puestoDesdePuntaje(score){
+  if(score >= 9) return {label:'1er puesto', cls:'oro'};
+  if(score === 8) return {label:'2do puesto', cls:'plata'};
+  if(score >= 6 && score <= 7) return {label:'3er puesto', cls:'bronce'};
+  if(score === 5) return {label:'Desierto', cls:'desierto'};
+  return {label:'—', cls:'desierto'};
+}
+function renderPuestoBadge(score){
+  if(score == null) return '';
+  const p = puestoDesdePuntaje(score);
+  return `<div class="puesto-badge ${p.cls}"><span class="dot2"></span>${p.label}</div>`;
+}
+function escalaPanelHTML(){
+  return `
+    <div class="escala-label">Escala Oficial Puramente Danza 2026</div>
+    <div class="escala-panel">
+      <div class="escala-row"><span class="nums">9 – 10</span><span class="chip oro">1er puesto</span></div>
+      <div class="escala-row"><span class="nums">8</span><span class="chip plata">2do puesto</span></div>
+      <div class="escala-row"><span class="nums">6 – 7</span><span class="chip bronce">3er puesto</span></div>
+      <div class="escala-row"><span class="nums">5</span><span class="chip desierto">Desierto</span></div>
+    </div>`;
+}
+
+/* ===================== Bloqueo Día + Jurado ===================== */
+function cargarLockGuardado(){
+  try{
+    const raw = localStorage.getItem(LOCK_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(data && data.dia && data.jurado && (JURADOS_POR_DIA[data.dia]||[]).includes(data.jurado)){
+      return data;
+    }
+  }catch(err){}
+  return null;
+}
+function guardarLock(dia, jurado){
+  lock = {dia, jurado};
+  try{ localStorage.setItem(LOCK_KEY, JSON.stringify(lock)); }catch(err){}
+}
+function borrarLock(){
+  lock = null;
+  try{ localStorage.removeItem(LOCK_KEY); }catch(err){}
+}
+
+function renderLockBadge(){
+  const wrap = el('lockBadgeWrap');
+  if(!lock){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div class="lock-badge">
+      <span>Jurado: <b>${lock.jurado}</b> · Día: <b>${lock.dia}</b></span>
+      <button id="cambiarJuradoBtn">¿No sos vos? Cambiar</button>
+    </div>`;
+  el('cambiarJuradoBtn').onclick = () => {
+    const ok = confirm(`¿Seguro que querés cambiar de jurado?\n\nActualmente calificando como "${lock.jurado}" (${lock.dia}).\n\nAceptar = cerrar sesión y elegir de nuevo.\nCancelar = seguir como estás.`);
+    if(ok){
+      borrarLock();
+      irSiguienteObra(true);
+      renderSetup();
+    }
+  };
+}
+
+function renderSetup(){
+  el('footerActions').style.display = 'none';
+  renderLockBadge();
+  el('mainArea').innerHTML = `
+    <div class="setup-card">
+      <h2>Bienvenidos a PURAMENTE DANZA 2026</h2>
+      <p class="hint">Elegí el día en el que estás jurando y después tu nombre. Una vez confirmado, queda fijo para toda la sesión — así no se puede calificar sin querer como otra persona o el día equivocado.</p>
+      <div class="setup-field">
+        <label>Día</label>
+        <select id="setupDia">
+          <option value="">Elegí el día…</option>
+          <option value="Sábado">Sábado</option>
+          <option value="Domingo">Domingo</option>
+        </select>
+      </div>
+      <div class="setup-field">
+        <label>Jurado</label>
+        <select id="setupJurado" disabled>
+          <option value="">Elegí primero el día…</option>
+        </select>
+      </div>
+      <div id="confirmArea"></div>
+      <button class="btn-primary" id="confirmarBtn" disabled>Confirmar y empezar</button>
+    </div>`;
+
+  const diaSel = el('setupDia');
+  const juradoSel = el('setupJurado');
+  const confirmArea = el('confirmArea');
+  const confirmarBtn = el('confirmarBtn');
+
+  diaSel.onchange = () => {
+    const dia = diaSel.value;
+    confirmArea.innerHTML = '';
+    confirmarBtn.disabled = true;
+    if(!dia){
+      juradoSel.disabled = true;
+      juradoSel.innerHTML = '<option value="">Elegí primero el día…</option>';
+      return;
+    }
+    juradoSel.disabled = false;
+    juradoSel.innerHTML = '<option value="">Elegí tu nombre…</option>' +
+      JURADOS_POR_DIA[dia].map(j => `<option value="${j}">${j}</option>`).join('');
+  };
+
+  juradoSel.onchange = () => {
+    const dia = diaSel.value, jurado = juradoSel.value;
+    if(!dia || !jurado){
+      confirmArea.innerHTML = '';
+      confirmarBtn.disabled = true;
+      return;
+    }
+    confirmArea.innerHTML = `<div class="confirm-box">Vas a calificar como <b>${jurado}</b>, día <b>${dia}</b>. Confirmá que sos vos antes de seguir.</div>`;
+    confirmarBtn.disabled = false;
+  };
+
+  confirmarBtn.onclick = () => {
+    guardarLock(diaSel.value, juradoSel.value);
+    renderLockBadge();
+    iniciarBusqueda();
+  };
+}
+
+/* ===================== Buscar obra ===================== */
+async function iniciarBusqueda(){
+  el('mainArea').innerHTML = `<div class="empty">Cargando las obras de ${lock.dia}…</div>`;
+  try{
+    const params = new URLSearchParams({action:'obrasJurado', dia: lock.dia});
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    obrasDelDia = json.obras || [];
+    renderBusqueda();
+  }catch(err){
+    el('mainArea').innerHTML = `<div class="status-banner err">No pude cargar las obras de ${lock.dia}. Revisá tu conexión y volvé a abrir la página.</div>`;
+  }
+}
+
+function renderBusqueda(){
+  el('footerActions').style.display = 'none';
+  el('mainArea').innerHTML = `
+    <div class="lookup">
+      <input id="nroInput" type="tel" inputmode="numeric" placeholder="N° de obra" maxlength="4">
+      <button id="buscarBtn">Buscar</button>
+    </div>
+    <div class="hint">${obrasDelDia.length} obra(s) publicadas para ${lock.dia}. Escribí el número de orden de la obra que vas a calificar.</div>
+    <div id="content"><div class="empty">Escribí un número de obra para empezar</div></div>
+  `;
+  el('buscarBtn').onclick = buscarObra;
+  el('nroInput').addEventListener('keypress', e => { if(e.key === 'Enter') buscarObra(); });
+  el('nroInput').focus();
+}
+
+async function buscarObra(){
+  const nro = parseInt(el('nroInput').value, 10);
+  if(!nro){ return; }
+  const obra = obrasDelDia.find(o => o.orden === nro);
+  if(!obra){
+    el('content').innerHTML = `<div class="status-banner err">No encontré la obra N° ${nro} en ${lock.dia}.</div>`;
+    el('footerActions').style.display = 'none';
+    return;
+  }
+  currentObra = obra;
+  currentScore = null;
+  currentScoreCoreo = null;
+  currentPremio = false;
+  audioMp3Blob = null;
+  audioUrlExistente = '';
+  yaEnviado = false;
+
+  render();
+  el('content').insertAdjacentHTML('beforeend', '<div class="status-banner warn" id="cargandoBanner">Buscando si ya calificaste esta obra antes…</div>');
+
+  try{
+    const params = new URLSearchParams({action:'cargarCalificacionJurado', dia: lock.dia, idInscripcion: obra.idInscripcion, jurado: lock.jurado});
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    const banner = el('cargandoBanner');
+    if(banner) banner.remove();
+    if(json.encontrado){
+      currentScore = json.puntaje != null && json.puntaje !== '' ? Number(json.puntaje) : null;
+      currentScoreCoreo = json.puntajeCoreo ? Number(json.puntajeCoreo) : null;
+      currentPremio = !!(json.premio);
+      audioUrlExistente = json.audioUrl || '';
+      yaEnviado = true;
+      render();
+    }
+  }catch(err){
+    const banner = el('cargandoBanner');
+    if(banner) banner.remove();
+  }
+}
+
+window.irSiguienteObra = function(sinConfirmar){
+  currentObra = null;
+  audioMp3Blob = null;
+  audioUrlExistente = '';
+  yaEnviado = false;
+  if(!sinConfirmar) renderBusqueda();
+};
+
+/* ===================== Render principal de la obra ===================== */
+function render(){
+  const d = currentObra;
+  const mostrarPremio = currentScore != null && currentScore >= 9;
+  el('content').innerHTML = `
+    <div class="card">
+      <div class="obra-title">N° ${d.orden} — ${d.obra}</div>
+      <div class="obra-academia">Academia oculta (evaluación a ciegas)</div>
+      <div class="meta-grid">
+        <div><div class="k">Modalidad</div><div class="v">${d.modalidad || '—'}</div></div>
+        <div><div class="k">Categoría</div><div class="v">${d.categoria || '—'}</div></div>
+        <div><div class="k">Tipo</div><div class="v">${d.tipoParticipacion || '—'}</div></div>
+        <div><div class="k">Duración</div><div class="v">${d.duracion || '—'}</div></div>
+      </div>
+      <div class="participantes">
+        <div class="k">Participantes</div>
+        ${(d.participantes||[]).join(', ') || '—'}
+      </div>
+    </div>
+
+    <div class="section-label">Devolución en audio</div>
+    <div class="rec-box">
+      <div class="rec-timer" id="recTimer">00:00</div>
+      <button class="rec-btn" id="recBtn"><div class="inner"></div></button>
+      <div class="rec-status" id="recStatus">Tocá para grabar tu devolución hablada</div>
+      ${audioUrlExistente ? `<div class="rec-existing">🎧 Ya hay un audio enviado — <a href="${audioUrlExistente}" target="_blank" rel="noopener">escuchar</a>. Grabá de nuevo solo si querés reemplazarlo.</div>` : ''}
+    </div>
+
+    <div class="section-label">Puntaje</div>
+    <div class="score-box">
+      <div class="score-value" id="scoreValue">${currentScore != null ? currentScore : '—'}</div>
+      <div id="puestoBadgeWrap">${currentScore != null ? renderPuestoBadge(currentScore) : '<div class="score-hint">Elegí un puntaje del 5 al 10</div>'}</div>
+      <div class="score-picker" id="scorePicker">
+        ${[5,6,7,8,9,10].map(n => `<button class="score-btn ${n===currentScore?'selected':''}" data-score="${n}">${n}</button>`).join('')}
+      </div>
+      ${escalaPanelHTML()}
+    </div>
+
+    ${d.competeCoreografia === 'Sí' ? `
+    <div class="section-label">Puntaje por Coreografía</div>
+    <div class="score-box">
+      <div class="coreo-flag">🏆 Esta obra compite por coreografía</div>
+      <div class="score-value" id="scoreCoreoValue">${currentScoreCoreo != null ? currentScoreCoreo : '—'}</div>
+      <div id="puestoBadgeCoreoWrap">${currentScoreCoreo != null ? renderPuestoBadge(currentScoreCoreo) : '<div class="score-hint">Elegí un puntaje del 5 al 10</div>'}</div>
+      <div class="score-picker" id="scorePickerCoreo">
+        ${[5,6,7,8,9,10].map(n => `<button class="score-btn ${n===currentScoreCoreo?'selected':''}" data-score-coreo="${n}">${n}</button>`).join('')}
+      </div>
+      ${escalaPanelHTML()}
+    </div>` : ''}
+
+    <div class="section-label">Premio especial</div>
+    <div id="premioArea">${premioAreaHTML(mostrarPremio, d)}</div>
+
+    <div id="bannerArea"></div>
+  `;
+
+  document.querySelectorAll('#scorePicker .score-btn').forEach(btn => {
+    btn.onclick = () => {
+      currentScore = parseInt(btn.dataset.score, 10);
+      el('scoreValue').textContent = currentScore;
+      el('puestoBadgeWrap').innerHTML = renderPuestoBadge(currentScore);
+      document.querySelectorAll('#scorePicker .score-btn').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.score,10)===currentScore));
+      if(currentScore < 9) currentPremio = false;
+      el('premioArea').innerHTML = premioAreaHTML(currentScore >= 9, d);
+      bindPremioCheck();
+      renderFooter();
+    };
+  });
+
+  if(el('scorePickerCoreo')){
+    document.querySelectorAll('#scorePickerCoreo .score-btn').forEach(btn => {
+      btn.onclick = () => {
+        currentScoreCoreo = parseInt(btn.dataset.scoreCoreo, 10);
+        el('scoreCoreoValue').textContent = currentScoreCoreo;
+        el('puestoBadgeCoreoWrap').innerHTML = renderPuestoBadge(currentScoreCoreo);
+        document.querySelectorAll('#scorePickerCoreo .score-btn').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.scoreCoreo,10)===currentScoreCoreo));
+      };
+    });
+  }
+
+  bindPremioCheck();
+  el('recBtn').onclick = toggleRecording;
+  renderFooter();
+}
+
+function premioAreaHTML(mostrar, d){
+  if(!mostrar){
+    return `<div class="premio-locked">🔒 Solo se puede postular a un premio especial si el puntaje es de <strong>9 o 10</strong>.</div>`;
+  }
+  return `
+    <div class="premio-box">
+      <label class="premio-check">
+        <input type="checkbox" id="premioCheck" ${currentPremio ? 'checked' : ''}>
+        Postular a <strong>Mejor Bailarín/a ${d.modalidad || ''}</strong> (la modalidad de esta obra)
+      </label>
+    </div>`;
+}
+function bindPremioCheck(){
+  const chk = el('premioCheck');
+  if(chk) chk.onchange = () => { currentPremio = chk.checked; };
+}
+
+/* ===================== Grabación + conversión a MP3 ===================== */
+async function toggleRecording(){
+  const btn = el('recBtn');
+  const status = el('recStatus');
+  if(!mediaRecorder || mediaRecorder.state === 'inactive'){
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
+        : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+      mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => { if(e.data && e.data.size > 0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = () => finalizarGrabacion(stream);
+      mediaRecorder.start();
+      btn.classList.add('recording');
+      status.textContent = 'Grabando…';
+      status.classList.add('live');
+      recordStartTime = Date.now();
+      recordTimerInterval = setInterval(updateTimer, 200);
+    }catch(err){
+      status.textContent = 'No pude acceder al micrófono: ' + err.message;
+    }
+  } else {
+    mediaRecorder.stop();
+    clearInterval(recordTimerInterval);
+    btn.classList.remove('recording');
+    status.classList.remove('live');
+  }
+}
+function updateTimer(){
+  const s = Math.floor((Date.now() - recordStartTime)/1000);
+  const mm = String(Math.floor(s/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  el('recTimer').textContent = `${mm}:${ss}`;
+}
+async function finalizarGrabacion(stream){
+  stream.getTracks().forEach(t => t.stop());
+  el('recStatus').textContent = 'Procesando y convirtiendo a MP3…';
+  if(audioChunks.length === 0){
+    el('recStatus').textContent = '⚠️ No se grabó audio. Intentá de nuevo.';
+    return;
+  }
+  const webmBlob = new Blob(audioChunks, {type: audioChunks[0].type || 'audio/webm'});
+  try{
+    const mp3Blob = await convertToMp3(webmBlob);
+    if(mp3Blob.size < 1000){
+      el('recStatus').textContent = '⚠️ El audio parece vacío o muy corto. Grabalo de nuevo antes de enviar.';
+      return;
+    }
+    audioMp3Blob = mp3Blob;
+    el('recStatus').textContent = '✓ Audio listo (' + (mp3Blob.size/1024).toFixed(0) + ' KB)';
+    renderFooter();
+  }catch(err){
+    el('recStatus').textContent = '⚠️ Error al convertir el audio. Probá grabar de nuevo.';
+  }
+}
+function convertToMp3(webmBlob){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try{
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioCtx.decodeAudioData(reader.result);
+        const samples = audioBuffer.getChannelData(0);
+        const sampleRate = audioBuffer.sampleRate;
+        const int16Samples = new Int16Array(samples.length);
+        for(let i = 0; i < samples.length; i++){
+          const s = Math.max(-1, Math.min(1, samples[i]));
+          int16Samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        const mp3Encoder = new lamejs.Mp3Encoder(1, sampleRate, 96);
+        const blockSize = 1152;
+        const mp3Data = [];
+        for(let i = 0; i < int16Samples.length; i += blockSize){
+          const chunk = int16Samples.subarray(i, i + blockSize);
+          const mp3buf = mp3Encoder.encodeBuffer(chunk);
+          if(mp3buf.length > 0) mp3Data.push(mp3buf);
+        }
+        const mp3buf = mp3Encoder.flush();
+        if(mp3buf.length > 0) mp3Data.push(mp3buf);
+        resolve(new Blob(mp3Data, {type:'audio/mpeg'}));
+      }catch(err){ reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(webmBlob);
+  });
+}
+
+/* ===================== Footer / Enviar ===================== */
+function renderFooter(){
+  const footer = el('footerActions');
+  const btn = el('sendBtn');
+  const note = el('modifyNote');
+  footer.style.display = 'block';
+  const hayAudio = !!(audioMp3Blob || audioUrlExistente);
+  btn.disabled = !hayAudio;
+  btn.textContent = yaEnviado ? 'Actualizar calificación' : 'Enviar calificación';
+  note.textContent = audioMp3Blob
+    ? 'Se va a subir un audio nuevo.'
+    : (audioUrlExistente
+      ? 'Se mantiene el audio ya enviado (no grabaste uno nuevo).'
+      : '🎙️ La devolución en audio es obligatoria — grabala arriba para poder enviar.');
+  btn.onclick = enviarCalificacion;
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function enviarCalificacion(){
+  if(currentScore == null){
+    el('bannerArea').innerHTML = `<div class="status-banner err">Elegí un puntaje (5 a 10) antes de enviar.</div>`;
+    return;
+  }
+  if(currentObra.competeCoreografia === 'Sí' && currentScoreCoreo == null){
+    el('bannerArea').innerHTML = `<div class="status-banner err">Esta obra compite por coreografía — elegí también el puntaje por coreografía antes de enviar.</div>`;
+    return;
+  }
+  if(!audioMp3Blob && !audioUrlExistente){
+    el('bannerArea').innerHTML = `<div class="status-banner err">🎙️ La devolución en audio es obligatoria. Grabala antes de enviar la calificación.</div>`;
+    return;
+  }
+  const btn = el('sendBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  el('bannerArea').innerHTML = '';
+  try{
+    const fd = new FormData();
+    fd.append('action', 'guardarCalificacionJurado');
+    fd.append('dia', lock.dia);
+    fd.append('jurado', lock.jurado);
+    fd.append('idInscripcion', currentObra.idInscripcion);
+    fd.append('ordenNro', currentObra.orden);
+    fd.append('nombreObra', currentObra.obra);
+    fd.append('puntaje', currentScore);
+    if(currentObra.competeCoreografia === 'Sí' && currentScoreCoreo != null){
+      fd.append('puntajeCoreo', currentScoreCoreo);
+    }
+    fd.append('postulaPremio', currentPremio ? 'true' : 'false');
+    fd.append('modalidadObra', currentObra.modalidad || '');
+    if(audioMp3Blob){
+      const base64 = await blobToBase64(audioMp3Blob);
+      fd.append('audioBase64', base64);
+    }
+
+    const r = await fetch(SCRIPT_URL, {method:'POST', body:fd});
+    const data = await r.json();
+    if(!data.ok) throw new Error(data.error || 'Error al guardar');
+
+    yaEnviado = true;
+    if(data.audioUrl) audioUrlExistente = data.audioUrl;
+    el('bannerArea').innerHTML = `<div class="status-banner ok">✓ Calificación guardada correctamente.</div>
+      <button class="siguiente-link" id="siguienteBtn">Calificar la siguiente obra →</button>`;
+    el('siguienteBtn').onclick = () => irSiguienteObra();
+    renderFooter();
+  }catch(err){
+    el('bannerArea').innerHTML = `<div class="status-banner err">No se pudo guardar: ${err.message}. Volvé a intentar.</div>`;
+    btn.disabled = false;
+  }
+}
+
+/* ===================== Arranque ===================== */
+// El premio especial ya no depende de una lista bajada del servidor — se
+// arma solo con la modalidad de la obra que se está calificando (ver
+// premioAreaHTML), así que acá no hace falta pedir nada de más.
+function iniciarApp(){
+  lock = cargarLockGuardado();
+  if(lock){
+    renderLockBadge();
+    iniciarBusqueda();
+  } else {
+    renderSetup();
+  }
+}
+iniciarApp();
+</script>
+</body>
+</html>
