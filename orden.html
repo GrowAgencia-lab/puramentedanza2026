@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<!--
+  PURAMENTE DANZA 2026 — Orden de participación (público)
+  ----------------------------------------------------------------------
+  Página pública de solo lectura: muestra el orden de participación ya
+  publicado (el que el organizador guardó desde el panel admin con
+  "Guardar orden"), separado por día y por bloque de jurado/horario.
+
+  No pide login. No muestra nada sensible (teléfono, email, monto, forma
+  de pago, comprobante, estado de pago ni datos de participantes) —
+  solo lo que hace falta para saber cuándo baila cada obra: posición,
+  hora estimada, nombre de la obra, academia, categoría, modalidad,
+  tipo de participación y coreógrafo/a.
+
+  Una obra aparece acá recién cuando el organizador le asignó una
+  posición y tocó "Guardar orden" en el panel admin — así el organizador
+  controla qué se ve público y cuándo.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Orden de participación — Puramente Danza 2026</title>
+<link rel="icon" href="assets/iconos/favicon.ico" sizes="any">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7B2FBE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Puramente Danza">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#7B2FBE;--pd:#4E1D7F;--a:#F0C078;--a2:#C9A6EA;--txt:#2B2432;--txt-suave:#6E6079;--borde:#E4DAF0;--marfil:#FBF8FF}
+body{
+  background:var(--marfil);
+  font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--txt);min-height:100vh;font-size:14px;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+a{color:inherit}
+
+.topbar{background:linear-gradient(90deg,var(--pd),var(--p));padding:.9rem 1.2rem;position:sticky;top:0;z-index:50;box-shadow:0 4px 14px rgba(53,19,79,.25)}
+.topbar-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:900px;margin:0 auto}
+.topbar h1{color:#fff;font-size:.95rem;font-weight:800}
+.topbar .sub{color:var(--a);font-size:.72rem;font-weight:600;margin-top:1px}
+.btn-volver{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:.35rem .8rem;border-radius:99px;font-size:.75rem;text-decoration:none;white-space:nowrap}
+
+.content{max-width:900px;margin:0 auto;padding:1.1rem 1rem 3rem}
+
+.dias-tabs{display:flex;gap:.5rem;margin-bottom:.9rem}
+.btn-dia{flex:1;padding:.65rem;border:1.5px solid var(--p);border-radius:10px;background:#fff;color:var(--p);font-weight:700;font-size:.88rem;cursor:pointer}
+.btn-dia.active{background:var(--p);color:#fff}
+
+.buscador-wrap{display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem;flex-wrap:wrap}
+#buscar{flex:1;min-width:180px;padding:.65rem .9rem;border:1.5px solid var(--borde);border-radius:10px;font-size:.88rem;outline:none}
+#buscar:focus{border-color:var(--p)}
+.btn-limpiar{background:none;border:1.5px solid var(--borde);border-radius:10px;padding:.6rem .9rem;font-size:.8rem;color:var(--txt-suave);cursor:pointer}
+#resultado-info{font-size:.75rem;color:var(--txt-suave);margin:-.3rem 0 .8rem}
+
+.actualizado{font-size:.72rem;color:var(--txt-suave);text-align:right;margin-bottom:.6rem}
+.btn-actualizar{background:none;border:none;color:var(--p);font-weight:700;font-size:.75rem;cursor:pointer;text-decoration:underline}
+
+.estado-box{background:#fff;border-radius:12px;padding:1.6rem 1.2rem;text-align:center;color:var(--txt-suave);font-size:.88rem;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.estado-box.error{color:#991B1B;background:#FEF2F2}
+
+.bloque-card{background:#fff;border-radius:14px;margin-bottom:1rem;overflow:hidden;box-shadow:0 4px 16px rgba(53,19,79,.08)}
+.bloque-hdr{background:linear-gradient(90deg,var(--pd),var(--p));color:#fff;padding:.8rem 1rem}
+.bloque-hdr .jurado{font-weight:800;font-size:.9rem}
+.bloque-hdr .horario{font-size:.76rem;opacity:.92;margin-top:2px}
+
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:#F4F1F8;color:var(--pd);text-align:left;padding:.55rem .7rem;white-space:nowrap;position:sticky;top:0}
+td{padding:.55rem .7rem;border-top:1px solid var(--borde);vertical-align:top}
+tr.fila-resaltada td{background:#F4EBFF}
+.num-orden{font-weight:800;color:var(--p)}
+.hora-est{font-variant-numeric:tabular-nums;color:var(--pd);font-weight:700;white-space:nowrap}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:99px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.b-cat{background:#EDE3F9;color:var(--pd)}
+.b-mod{background:#FFF3E0;color:#9A6400}
+.b-tipo{background:#DCFCE7;color:#166534}
+.coreo{color:#888;font-size:.78rem}
+
+.leyenda{font-size:.75rem;color:var(--txt-suave);text-align:center;margin:1.2rem auto 0;max-width:560px;line-height:1.5}
+
+.contacto-card{background:#fff;border-radius:12px;padding:1rem 1.2rem;margin-top:1.4rem;font-size:.82rem;color:#555;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.contacto-card a{color:var(--p);font-weight:700;text-decoration:none}
+
+.spinner{width:16px;height:16px;border:2.5px solid rgba(123,47,190,.25);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-fila">
+    <div>
+      <h1>🩰 Orden de participación</h1>
+      <div class="sub">Puramente Danza 2026</div>
+    </div>
+    <a class="btn-volver" href="index.html">← Portal</a>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="dias-tabs">
+    <button class="btn-dia active" id="tab-sabado" onclick="cambiarDia('Sábado')">Sábado</button>
+    <button class="btn-dia" id="tab-domingo" onclick="cambiarDia('Domingo')">Domingo</button>
+  </div>
+
+  <div class="buscador-wrap">
+    <input type="text" id="buscar" placeholder="🔍 Buscar por obra, academia o coreógrafo/a..." oninput="renderTodo()">
+    <button class="btn-limpiar" type="button" onclick="document.getElementById('buscar').value='';renderTodo()">✕ Limpiar</button>
+  </div>
+  <div id="resultado-info"></div>
+
+  <div class="actualizado" id="actualizado">
+    <button class="btn-actualizar" onclick="cargarTodo()">🔄 Actualizar</button>
+  </div>
+
+  <div id="contenido">
+    <div class="estado-box"><span class="spinner"></span> Cargando el orden de participación...</div>
+  </div>
+
+  <p class="leyenda">
+    El orden y los horarios son <b>estimados</b> y pueden cambiar hasta último momento
+    (imprevistos, cambios de última hora, etc.). Este cuadro se actualiza a medida que
+    la organización confirma el orden final de cada día.
+  </p>
+
+  <div class="contacto-card">
+    ¿Dudas sobre tu horario? Escribinos al <a href="https://wa.me/595994445463" target="_blank" rel="noopener">WhatsApp (0994) 445463</a>
+    o a <a href="mailto:puramentedanza@gmail.com">puramentedanza@gmail.com</a>
+  </div>
+
+</div>
+
+<script>
+window.addEventListener('error', (ev) => {
+  console.error('Error en la página:', ev.error || ev.message);
+});
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxTzNYtwXPeaE3PBGrGaooxstaHNFd1DcnPVPs2tKnqvse-9X1CSK2nSxRPqalJhGQYw/exec";
+const GAP_TRANSICION_SEG = 20; // pausa estimada entre una obra y la siguiente
+
+let DATA = [];
+let CONFIG_BLOQUES = [];
+let PUBLICADO = { 'Sábado': false, 'Domingo': false };
+let DIA_ACTUAL = 'Sábado';
+let CARGANDO = false;
+
+function normalizarTexto(s){
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function escHtml(s){
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function horaAsegundos(horaStr){
+  const partes = String(horaStr||'0:0').split(':').map(Number);
+  return (partes[0]||0)*3600 + (partes[1]||0)*60;
+}
+function segundosAHora(totalSeg){
+  totalSeg = Math.round(totalSeg);
+  const h = Math.floor(totalSeg/3600) % 24;
+  const m = Math.floor((totalSeg%3600)/60);
+  const s = totalSeg % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function duracionASegundos(dur){
+  if(!dur) return 0;
+  const partes = String(dur).split(':').map(Number);
+  if(partes.length >= 2) return (partes[0]||0)*60 + (partes[1]||0);
+  return 0;
+}
+
+// Misma lógica que el panel admin: los bloques son puramente ventanas de
+// horario (jurado + inicio/fin), sin filtrar por modalidad. Se recorre la
+// lista ya publicada, en orden, y se va llenando el primer bloque hasta que
+// la próxima obra no entra por horario — ahí sigue el próximo bloque desde
+// esa misma obra. Los números dentro de cada bloque quedan consecutivos.
+function calcularBloques(lista, configBloques){
+  const bloques = configBloques.map(b => ({
+    ...b,
+    filas: [],
+    _cursor: horaAsegundos(b.horaInicio),
+    _fin: horaAsegundos(b.horaFin),
+  }));
+
+  let idx = 0;
+  for(const bloque of bloques){
+    while(idx < lista.length){
+      const obra = lista[idx];
+      const duracionSeg = duracionASegundos(obra.duracion);
+      if(bloque._cursor + duracionSeg > bloque._fin) break;
+      bloque.filas.push({ ...obra, numeroOrden: idx+1, horaEstimada: segundosAHora(bloque._cursor) });
+      bloque._cursor += duracionSeg + GAP_TRANSICION_SEG;
+      idx++;
+    }
+  }
+  const sinBloque = lista.slice(idx).map((obra, i) => ({ ...obra, numeroOrden: idx+i+1 }));
+
+  bloques.forEach(b => { delete b._cursor; delete b._fin; });
+  return { bloques, sinBloque };
+}
+
+async function cargarTodo(){
+  if(CARGANDO) return;
+  CARGANDO = true;
+  document.getElementById('contenido').innerHTML = '<div class="estado-box"><span class="spinner"></span> Cargando el orden de participación...</div>';
+  try{
+    const [rIns, rBloques, rPub] = await Promise.all([
+      fetch(SCRIPT_URL + '?action=inscripcionesAdmin&_ts=' + Date.now(), {cache:'no-store'}),
+      fetch(SCRIPT_URL + '?action=configBloques&_ts=' + Date.now(), {cache:'no-store'}),
+      fetch(SCRIPT_URL + '?action=estadoPublicacionOrden&_ts=' + Date.now(), {cache:'no-store'}),
+    ]);
+    const jIns = await rIns.json();
+    const jBloques = await rBloques.json();
+    const jPub = await rPub.json();
+    DATA = jIns.inscripciones || [];
+    CONFIG_BLOQUES = jBloques.bloques || [];
+    PUBLICADO = jPub.publicado || { 'Sábado': false, 'Domingo': false };
+    document.getElementById('actualizado').innerHTML =
+      'Actualizado ' + new Date().toLocaleTimeString('es-PY', {hour:'2-digit', minute:'2-digit'}) +
+      ' · <button class="btn-actualizar" onclick="cargarTodo()">🔄 Actualizar</button>';
+    renderTodo();
+  }catch(err){
+    console.error(err);
+    document.getElementById('contenido').innerHTML =
+      '<div class="estado-box error">❌ No se pudo cargar el orden en este momento. Probá de nuevo en unos segundos.<br><br>' +
+      '<button class="btn-actualizar" onclick="cargarTodo()">🔄 Reintentar</button></div>';
+  }finally{
+    CARGANDO = false;
+  }
+}
+
+function cambiarDia(dia){
+  DIA_ACTUAL = dia;
+  document.getElementById('tab-sabado').classList.toggle('active', dia==='Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', dia==='Domingo');
+  renderTodo();
+}
+
+function renderTodo(){
+  const cont = document.getElementById('contenido');
+  const infoResultado = document.getElementById('resultado-info');
+
+  // La organización controla, día por día, cuándo se ve esto acá — con un
+  // interruptor de "Publicar" propio en el panel admin, separado de
+  // "Guardar orden". Aunque el orden ya esté guardado, no se muestra nada
+  // hasta que ese día puntual esté publicado.
+  if(!PUBLICADO[DIA_ACTUAL]){
+    infoResultado.textContent = '';
+    cont.innerHTML = `<div class="estado-box">Todavía no hay un orden publicado para ${DIA_ACTUAL}. Volvé a mirar más cerca de la fecha del evento.</div>`;
+    return;
+  }
+
+  // Solo entran las obras que el organizador ya publicó (tienen una
+  // posición asignada y guardada) — así la organización controla qué se
+  // ve acá y cuándo, tocando "Guardar orden" en el panel admin.
+  const lista = DATA
+    .filter(d => d.tipo === 'competencia' && (d.dia||'').trim() === DIA_ACTUAL)
+    .filter(d => d.orden !== '' && d.orden != null && d.orden !== 'EXCLUIDO')
+    .sort((a,b) => Number(a.orden) - Number(b.orden));
+
+  if(!lista.length){
+    infoResultado.textContent = '';
+    cont.innerHTML = `<div class="estado-box">Todavía no hay un orden publicado para ${DIA_ACTUAL}. Volvé a mirar más cerca de la fecha del evento.</div>`;
+    return;
+  }
+
+  const termino = normalizarTexto(document.getElementById('buscar').value.trim());
+  const coincide = (o) => !termino || normalizarTexto([o.nombre, o.institucion, o.coreografo].filter(Boolean).join(' ')).includes(termino);
+
+  const bloquesDelDia = (CONFIG_BLOQUES || []).filter(b => b.dia === DIA_ACTUAL);
+
+  let filasParaContar = 0;
+  let html = '';
+
+  if(bloquesDelDia.length){
+    const { bloques, sinBloque } = calcularBloques(lista, bloquesDelDia);
+
+    bloques.forEach((bloque, iBloque) => {
+      const filasVisibles = bloque.filas.filter(coincide);
+      if(!filasVisibles.length) return;
+      filasParaContar += filasVisibles.length;
+      html += `<div class="bloque-card">
+        <div class="bloque-hdr">
+          <div class="jurado">🎬 Bloque ${iBloque+1}</div>
+          <div class="horario">${escHtml(bloque.horaInicio)} a ${escHtml(bloque.horaFin)} · ${bloque.filas.length} obra(s) · # ${bloque.filas[0].numeroOrden} a ${bloque.filas[bloque.filas.length-1].numeroOrden}</div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <tr><th>#</th><th>Obra</th><th>Academia</th><th>Categoría</th><th>Modalidad</th><th>Tipo</th><th>Coreógrafo/a</th></tr>
+          ${filasVisibles.map(o => `
+            <tr class="${termino ? 'fila-resaltada' : ''}">
+              <td class="num-orden">${o.numeroOrden}</td>
+              <td>${escHtml(o.nombre)}</td>
+              <td>${escHtml(o.institucion)}</td>
+              <td><span class="badge b-cat">${escHtml(o.categoria||'')}</span></td>
+              <td><span class="badge b-mod">${escHtml(o.modalidad||'')}</span></td>
+              <td><span class="badge b-tipo">${escHtml(o.tipoParticipacion||'')}</span></td>
+              <td class="coreo">${escHtml(o.coreografo||'')}</td>
+            </tr>
+          `).join('')}
+        </table></div>
+      </div>`;
+    });
+
+    const sinBloqueVisibles = sinBloque.filter(coincide);
+    if(sinBloqueVisibles.length){
+      filasParaContar += sinBloqueVisibles.length;
+      html += `<div class="bloque-card">
+        <div class="bloque-hdr" style="background:linear-gradient(90deg,#991B1B,#DC2626)">
+          <div class="jurado">⏳ Por confirmar horario</div>
+          <div class="horario">Todavía no entran en el horario configurado — la organización va a sumar más tiempo</div>
+        </div>
+        <div class="tbl-wrap"><table>
+          <tr><th>#</th><th>Obra</th><th>Academia</th><th>Categoría</th><th>Modalidad</th><th>Tipo</th><th>Coreógrafo/a</th></tr>
+          ${sinBloqueVisibles.map(o => `
+            <tr class="${termino ? 'fila-resaltada' : ''}">
+              <td class="num-orden">${o.numeroOrden}</td>
+              <td>${escHtml(o.nombre)}</td>
+              <td>${escHtml(o.institucion)}</td>
+              <td><span class="badge b-cat">${escHtml(o.categoria||'')}</span></td>
+              <td><span class="badge b-mod">${escHtml(o.modalidad||'')}</span></td>
+              <td><span class="badge b-tipo">${escHtml(o.tipoParticipacion||'')}</span></td>
+              <td class="coreo">${escHtml(o.coreografo||'')}</td>
+            </tr>
+          `).join('')}
+        </table></div>
+      </div>`;
+    }
+  } else {
+    // Todavía no hay bloques de horario cargados para este día — mostramos
+    // igual el orden ya publicado, solo que sin hora estimada.
+    const listaVisible = lista.map((o,i) => ({...o, numeroOrden:i+1})).filter(coincide);
+    filasParaContar = listaVisible.length;
+    html += `<div class="bloque-card">
+      <div class="bloque-hdr">
+        <div class="jurado">🩰 Orden de ${DIA_ACTUAL}</div>
+        <div class="horario">${lista.length} obra(s) · horarios estimados todavía no disponibles para este día</div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <tr><th>#</th><th>Obra</th><th>Academia</th><th>Categoría</th><th>Modalidad</th><th>Tipo</th><th>Coreógrafo/a</th></tr>
+        ${listaVisible.map(o => `
+          <tr class="${termino ? 'fila-resaltada' : ''}">
+            <td class="num-orden">${o.numeroOrden}</td>
+            <td>${escHtml(o.nombre)}</td>
+            <td>${escHtml(o.institucion)}</td>
+            <td><span class="badge b-cat">${escHtml(o.categoria||'')}</span></td>
+            <td><span class="badge b-mod">${escHtml(o.modalidad||'')}</span></td>
+            <td><span class="badge b-tipo">${escHtml(o.tipoParticipacion||'')}</span></td>
+            <td class="coreo">${escHtml(o.coreografo||'')}</td>
+          </tr>
+        `).join('')}
+      </table></div>
+    </div>`;
+  }
+
+  if(!html){
+    infoResultado.textContent = termino ? `Sin resultados para "${document.getElementById('buscar').value.trim()}" en ${DIA_ACTUAL}.` : '';
+    cont.innerHTML = `<div class="estado-box">No se encontraron obras que coincidan con la búsqueda en ${DIA_ACTUAL}.</div>`;
+    return;
+  }
+
+  infoResultado.textContent = termino ? `Mostrando ${filasParaContar} de ${lista.length} obra(s) en ${DIA_ACTUAL}` : '';
+  cont.innerHTML = html;
+}
+
+cargarTodo();
+</script>
+</body>
+</html>
