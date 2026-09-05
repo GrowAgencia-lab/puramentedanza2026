@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>Portal de Devoluciones — Puramente Danza 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#7B2FBE;--pd:#4E1D7F;--a:#F0C078;--a2:#C9A6EA;--txt:#2B2432;--borde:#E4DAF0}
+body{
+  background:linear-gradient(160deg,#4E1D7F,#7B2FBE 55%,#C9A6EA);
+  font-family:'Segoe UI',system-ui,sans-serif;color:var(--txt);min-height:100vh;font-size:14px;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-box{background:#fff;border-radius:16px;padding:2.2rem 1.8rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.login-box h2{text-align:center;color:var(--pd);font-size:1.15rem;margin-bottom:.2rem}
+.login-box p{text-align:center;color:#888;font-size:.82rem;margin-bottom:1.4rem}
+.lbl-field{display:block;font-size:.75rem;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.3rem;margin-top:.85rem}
+.login-box input{width:100%;padding:.65rem .85rem;border:1.5px solid var(--borde);border-radius:8px;font-size:1rem;color:var(--txt);letter-spacing:.5px}
+.login-box input:focus{outline:none;border-color:var(--p)}
+.btn-login{width:100%;margin-top:1.3rem;padding:.75rem;background:linear-gradient(90deg,var(--p),var(--a2));border:none;border-radius:10px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+.login-error{background:#FFF5F5;border:1px solid #FC8181;border-radius:8px;padding:.6rem;font-size:.82rem;color:#C53030;margin-top:.85rem;display:none;text-align:center}
+.login-hint{font-size:.75rem;color:#999;text-align:center;margin-top:1rem;line-height:1.5}
+
+/* APP */
+.app{display:none;min-height:100vh}
+.topbar{background:linear-gradient(90deg,var(--pd),var(--p));padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar h1{color:#fff;font-size:.85rem;font-weight:700}
+.topbar .sub{color:var(--a);font-size:.72rem;font-weight:600}
+.btn-logout{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:.35rem .8rem;border-radius:99px;font-size:.75rem;cursor:pointer}
+
+.content{max-width:760px;margin:0 auto;padding:1.3rem 1rem 3rem}
+
+.dia-tabs{display:flex;gap:.5rem;margin-bottom:1.1rem}
+.dia-tab{flex:1;padding:.65rem;text-align:center;border-radius:10px;background:rgba(255,255,255,.15);color:#fff;font-weight:700;font-size:.85rem;cursor:pointer;border:1.5px solid rgba(255,255,255,.3)}
+.dia-tab.active{background:#fff;color:var(--pd);border-color:#fff}
+
+.estado-box{background:rgba(255,255,255,.92);border-radius:12px;padding:1.6rem;text-align:center;color:#555;font-size:.88rem;line-height:1.5}
+
+.obra-card{background:#fff;border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:1rem;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.obra-nombre{font-weight:700;color:var(--pd);font-size:1rem}
+.obra-meta{font-size:.78rem;color:#888;margin-top:2px}
+
+.jurado-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:.6rem 0;border-bottom:1px solid #F0EBF7;flex-wrap:wrap}
+.jurado-row:last-of-type{border-bottom:none}
+.jurado-row .jnombre{font-weight:600;color:var(--txt);font-size:.85rem;flex:1;min-width:120px}
+.jurado-row .jpuntaje{font-weight:800;color:var(--p);font-size:.95rem;white-space:nowrap}
+.jurado-row .jpuesto{font-size:.72rem;font-weight:700;padding:.15rem .5rem;border-radius:99px;white-space:nowrap}
+.puesto-1{background:#FEF3C7;color:#92400E}
+.puesto-2{background:#EDE0F9;color:var(--pd)}
+.puesto-3{background:#DBEAFE;color:#1E40AF}
+.puesto-x{background:#FEE2E2;color:#991B1B}
+.jurado-row .jaudio{font-size:.78rem}
+.jurado-row .jaudio a{color:var(--p);font-weight:700;text-decoration:none}
+
+.resumen-final{display:flex;justify-content:space-between;align-items:center;margin-top:.8rem;padding-top:.8rem;border-top:2px solid var(--borde);flex-wrap:wrap;gap:8px}
+.resumen-final .prom{font-size:.8rem;color:#888}
+.resumen-final .prom b{color:var(--pd);font-size:.95rem}
+
+.premio-box{background:#FEF3C7;color:#92400E;border-radius:8px;padding:.5rem .7rem;font-size:.78rem;font-weight:600;margin-top:.7rem}
+
+.btn-pdf{display:inline-block;margin-top:.8rem;background:var(--p);color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-size:.8rem;font-weight:700;cursor:pointer;text-decoration:none}
+
+.sin-puntajes{font-size:.8rem;color:#aaa;padding:.5rem 0}
+
+.spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-2px;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.contacto-card{background:#fff;border-radius:12px;padding:1rem 1.2rem;margin-top:1rem;font-size:.82rem;color:#555;text-align:center}
+.contacto-card a{color:var(--p);font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <h2>Portal de Devoluciones</h2>
+    <p>Puntajes, comentarios en audio y PDF — Puramente Danza 2026</p>
+    <label class="lbl-field">Academia</label>
+    <input type="text" id="inp-academia" list="academias-datalist" placeholder="Escribí el nombre de tu academia..." autocomplete="off"/>
+    <datalist id="academias-datalist"></datalist>
+    <label class="lbl-field">PIN</label>
+    <input type="text" id="inp-pin" placeholder="Ej: EV27" maxlength="8" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
+    <div class="login-error" id="login-err"></div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Ingresar</button>
+    <div class="login-hint">Es el mismo PIN que usás para entrar a "Mis Inscripciones". ¿No lo tenés a mano? Escribinos por WhatsApp al (0994) 445463.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div>
+      <h1 id="academia-nombre">Academia</h1>
+      <div class="sub">Portal de Devoluciones — Puramente Danza 2026</div>
+    </div>
+    <button class="btn-logout" onclick="location.reload()">Salir</button>
+  </div>
+
+  <div class="content">
+    <div class="dia-tabs">
+      <div class="dia-tab active" id="tab-sabado" onclick="cambiarDia('Sábado')">Sábado</div>
+      <div class="dia-tab" id="tab-domingo" onclick="cambiarDia('Domingo')">Domingo</div>
+    </div>
+
+    <div id="contenido-dia">
+      <div class="estado-box"><span class="spinner" style="border-color:rgba(123,47,190,.25);border-top-color:var(--p)"></span> Cargando...</div>
+    </div>
+
+    <div class="contacto-card">
+      ¿Alguna duda sobre tus resultados? Escribinos por WhatsApp al <a href="https://wa.me/595994445463" target="_blank">(0994) 445463</a>.
+    </div>
+  </div>
+</div>
+
+<script>
+window.addEventListener('error', (ev) => { console.error('Error en la página:', ev.error || ev.message); });
+window.addEventListener('unhandledrejection', (ev) => { console.error('Error no capturado:', ev.reason); });
+
+/* Mismo backend que jurado.html y admin-jurado.html — el Portal de
+   Devoluciones también necesita los datos de la planilla del jurado. */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyks-M48ngn0Vhrhmyx_GgcNU5EAdId9ZTLUbHvAO2LXuZmCW_p0n8pRapccx_aKfq6Iw/exec';
+
+let ACADEMIA_NOMBRE = null;
+let PIN_ACTUAL = null;
+let DIA_ACTUAL = 'Sábado';
+
+function escHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  }[ch]));
+}
+
+async function cargarAcademiasLogin(){
+  const dl = document.getElementById('academias-datalist');
+  try{
+    const r = await fetch(SCRIPT_URL + '?action=devolucionesListaAcademias');
+    const json = await r.json();
+    if(json.ok) dl.innerHTML = (json.academias || []).map(a => `<option value="${escHtml(a)}">`).join('');
+  }catch(e){}
+}
+cargarAcademiasLogin();
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && document.getElementById('login-wrap').style.display !== 'none') doLogin();
+});
+
+async function doLogin(){
+  const institucion = document.getElementById('inp-academia').value.trim();
+  const pin = document.getElementById('inp-pin').value.trim();
+  const errEl = document.getElementById('login-err');
+  const btn = document.getElementById('btn-login');
+  errEl.style.display = 'none';
+
+  if(!institucion || !pin){
+    errEl.textContent = 'Completá tu academia y tu PIN.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span> Verificando...';
+
+  try{
+    const params = new URLSearchParams({ action: 'devolucionesLogin', institucion, pin });
+    const r = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await r.json();
+    if(!json.ok){
+      errEl.textContent = json.error || 'Academia o PIN incorrectos.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Ingresar';
+      return;
+    }
+    ACADEMIA_NOMBRE = json.nombre;
+    PIN_ACTUAL = pin;
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('academia-nombre').textContent = ACADEMIA_NOMBRE;
+    cargarResultados();
+  }catch(err){
+    errEl.textContent = 'Error de conexión. Intentá de nuevo.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Ingresar';
+  }
+}
+
+function cambiarDia(dia){
+  DIA_ACTUAL = dia;
+  document.getElementById('tab-sabado').classList.toggle('active', dia === 'Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', dia === 'Domingo');
+  cargarResultados();
+}
+
+function puestoClase(puesto){
+  if(puesto === '1er puesto') return 'puesto-1';
+  if(puesto === '2do puesto') return 'puesto-2';
+  if(puesto === '3er puesto') return 'puesto-3';
+  return 'puesto-x';
+}
+function puestoDesdePuntaje(score){
+  const n = Number(score);
+  if(n >= 9) return '1er puesto';
+  if(n === 8) return '2do puesto';
+  if(n >= 6 && n <= 7) return '3er puesto';
+  if(n === 5) return 'Desierto';
+  return '';
+}
+
+async function cargarResultados(){
+  const cont = document.getElementById('contenido-dia');
+  cont.innerHTML = '<div class="estado-box"><span class="spinner" style="border-color:rgba(123,47,190,.25);border-top-color:var(--p)"></span> Cargando...</div>';
+  try{
+    const params = new URLSearchParams({ action: 'devolucionesResultados', institucion: ACADEMIA_NOMBRE, pin: PIN_ACTUAL, dia: DIA_ACTUAL });
+    const r = await fetch(SCRIPT_URL + '?' + params.toString(), { cache: 'no-store' });
+    const json = await r.json();
+    if(!json.ok){
+      cont.innerHTML = `<div class="estado-box">❌ ${escHtml(json.error || 'No se pudo cargar la información.')}</div>`;
+      return;
+    }
+    if(!json.publicado){
+      cont.innerHTML = `<div class="estado-box">Todavía no publicamos los resultados de ${DIA_ACTUAL}.<br>Volvé a revisar más cerca de la fecha del evento.</div>`;
+      return;
+    }
+    renderObras(json.obras || []);
+  }catch(err){
+    cont.innerHTML = '<div class="estado-box">❌ Error de conexión. Probá de nuevo.</div>';
+  }
+}
+
+function renderObras(obras){
+  const cont = document.getElementById('contenido-dia');
+  if(!obras.length){
+    cont.innerHTML = `<div class="estado-box">No encontramos obras tuyas registradas para ${DIA_ACTUAL}.</div>`;
+    return;
+  }
+
+  cont.innerHTML = obras.map(o => {
+    const filasJurados = o.resultados.length
+      ? o.resultados.map(r => `
+        <div class="jurado-row">
+          <div class="jnombre">${escHtml(r.jurado)}</div>
+          <div class="jpuesto ${puestoClase(puestoDesdePuntaje(r.score))}">${puestoDesdePuntaje(r.score) || '—'}</div>
+          <div class="jpuntaje">${escHtml(r.score)}${r.scoreCoreo ? ' · Coreo ' + escHtml(r.scoreCoreo) : ''}</div>
+          <div class="jaudio">${r.audioUrl ? `<a href="${r.audioUrl}" target="_blank">🔊 Escuchar devolución</a>` : ''}</div>
+        </div>
+      `).join('')
+      : '<div class="sin-puntajes">Todavía no hay puntajes cargados para esta obra.</div>';
+
+    const tieneResumen = o.promedio !== '' && o.promedio != null;
+    const resumen = tieneResumen ? `
+      <div class="resumen-final">
+        <div class="prom">Promedio: <b>${escHtml(o.promedio)}</b> — ${escHtml(o.puestoFinal || '')}</div>
+        ${o.promedioCoreo !== '' && o.promedioCoreo != null ? `<div class="prom">Coreografía: <b>${escHtml(o.promedioCoreo)}</b> — ${escHtml(o.puestoCoreoFinal || '')}</div>` : ''}
+      </div>
+    ` : '';
+
+    const premio = o.premiosPostulados ? `<div class="premio-box">🏆 Postulación a premio especial: ${escHtml(o.premiosPostulados)}</div>` : '';
+    const pdf = o.pdfUrl ? `<a class="btn-pdf" href="${o.pdfUrl}" target="_blank">⬇ Descargar PDF de devolución</a>` : '';
+
+    return `
+      <div class="obra-card">
+        <div class="obra-nombre">N° ${escHtml(o.nro)} — ${escHtml(o.obra)}</div>
+        <div class="obra-meta">${escHtml(o.modalidad || '')} · ${escHtml(o.categoria || '')} · ${escHtml(o.tipoParticipacion || '')}</div>
+        <div style="margin-top:.8rem">${filasJurados}</div>
+        ${resumen}
+        ${premio}
+        ${pdf}
+      </div>
+    `;
+  }).join('');
+}
+</script>
+</body>
+</html>
