@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<!--
+  PURAMENTE DANZA 2026 — Portal de Músicas (público)
+  ----------------------------------------------------------------------
+  Página pública de solo lectura, hermana de orden.html: muestra, por
+  día, la música de cada obra en el mismo orden ya publicado (el mismo
+  interruptor "Publicar" que usa "Orden de participación" — una obra
+  aparece acá recién cuando ese día está publicado), con reproductor,
+  botón de descarga y un check de "verificada" que se guarda en este
+  mismo navegador (localStorage), pensado para que quien esté revisando
+  el material (sonidista, organización) pueda ir marcando qué música ya
+  escuchó y confirmó que está bien.
+
+  No pide login. No muestra nada sensible (teléfono, email, monto, forma
+  de pago, comprobante ni datos de participantes) — solo lo necesario
+  para identificar la obra y escuchar/descargar su música.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Portal de Músicas — Puramente Danza 2026</title>
+<link rel="icon" href="assets/iconos/favicon.ico" sizes="any">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7B2FBE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Puramente Danza">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#7B2FBE;--pd:#4E1D7F;--a:#F0C078;--a2:#C9A6EA;--txt:#2B2432;--txt-suave:#6E6079;--borde:#E4DAF0;--marfil:#FBF8FF;--ok:#1E8A5F;--ok-bg:#DFF5EA;--warn:#B45309;--warn-bg:#FEF3E2;--err:#C62855;--err-bg:#FBDDE6}
+body{
+  background:var(--marfil);
+  font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--txt);min-height:100vh;font-size:14px;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+a{color:inherit}
+
+.topbar{background:linear-gradient(90deg,var(--pd),var(--p));padding:.9rem 1.2rem;position:sticky;top:0;z-index:50;box-shadow:0 4px 14px rgba(53,19,79,.25)}
+.topbar-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:900px;margin:0 auto}
+.topbar h1{color:#fff;font-size:.95rem;font-weight:800}
+.topbar .sub{color:var(--a);font-size:.72rem;font-weight:600;margin-top:1px}
+.btn-volver{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:.35rem .8rem;border-radius:99px;font-size:.75rem;text-decoration:none;white-space:nowrap}
+
+.content{max-width:900px;margin:0 auto;padding:1.1rem 1rem 3rem}
+
+.dias-tabs{display:flex;gap:.5rem;margin-bottom:.9rem}
+.btn-dia{flex:1;padding:.65rem;border:1.5px solid var(--p);border-radius:10px;background:#fff;color:var(--p);font-weight:700;font-size:.88rem;cursor:pointer}
+.btn-dia.active{background:var(--p);color:#fff}
+
+.buscador-wrap{display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem;flex-wrap:wrap}
+#buscar{flex:1;min-width:180px;padding:.65rem .9rem;border:1.5px solid var(--borde);border-radius:10px;font-size:.88rem;outline:none}
+#buscar:focus{border-color:var(--p)}
+.btn-limpiar{background:none;border:1.5px solid var(--borde);border-radius:10px;padding:.6rem .9rem;font-size:.8rem;color:var(--txt-suave);cursor:pointer}
+#resultado-info{font-size:.75rem;color:var(--txt-suave);margin:-.3rem 0 .8rem}
+
+.actualizado{font-size:.72rem;color:var(--txt-suave);text-align:right;margin-bottom:.6rem}
+.btn-actualizar{background:none;border:none;color:var(--p);font-weight:700;font-size:.75rem;cursor:pointer;text-decoration:underline}
+
+.resumen{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.9rem}
+.chip{background:#fff;border:1px solid var(--borde);border-radius:20px;padding:.4rem .85rem;font-size:.76rem;font-weight:700;color:var(--txt-suave);box-shadow:0 2px 8px rgba(53,19,79,.05)}
+.chip b{color:var(--pd);font-size:.85rem}
+
+.estado-box{background:#fff;border-radius:12px;padding:1.6rem 1.2rem;text-align:center;color:var(--txt-suave);font-size:.88rem;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.estado-box.error{color:#991B1B;background:#FEF2F2}
+
+.obra-card{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:.9rem 1rem;margin-bottom:.7rem;box-shadow:0 4px 16px rgba(53,19,79,.06)}
+.obra-card.verificada{border-color:var(--ok);background:var(--ok-bg)}
+.obra-card.resaltada{outline:2px solid var(--p)}
+.obra-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:.55rem}
+.obra-nro{font-size:1.35rem;font-weight:800;color:var(--pd);min-width:32px}
+.obra-info{flex:1;min-width:0}
+.obra-titulo{font-weight:700;font-size:.92rem}
+.obra-academia{font-size:.78rem;color:var(--txt-suave);margin-top:1px}
+.obra-meta{font-size:.72rem;color:var(--txt-suave);margin-top:3px}
+.obra-meta .badge{display:inline-block;padding:.1rem .5rem;border-radius:99px;font-size:.68rem;font-weight:700;margin-right:4px}
+.b-cat{background:#EDE3F9;color:var(--pd)}
+.b-mod{background:#FFF3E0;color:#9A6400}
+
+.badge-estado{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:.2rem .55rem;border-radius:20px;white-space:nowrap}
+.badge-envivo{background:var(--warn-bg);color:var(--warn)}
+.badge-sinaudio{background:var(--err-bg);color:var(--err)}
+.badge-revisar{background:var(--err-bg);color:var(--err)}
+.aviso-revisar{font-size:.7rem;color:var(--err);margin-top:4px;font-weight:600}
+
+.obra-acciones{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+audio{height:34px;flex:1;min-width:170px}
+.btn-descarga{background:var(--p);color:#fff;text-decoration:none;font-size:.76rem;font-weight:700;padding:.5rem .75rem;border-radius:10px;white-space:nowrap}
+.check-verificado{display:flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;color:var(--txt-suave);cursor:pointer;margin-left:auto;white-space:nowrap}
+.check-verificado input{width:15px;height:15px;accent-color:var(--ok)}
+
+.leyenda{font-size:.75rem;color:var(--txt-suave);text-align:center;margin:1.2rem auto 0;max-width:560px;line-height:1.5}
+.contacto-card{background:#fff;border-radius:12px;padding:1rem 1.2rem;margin-top:1.4rem;font-size:.82rem;color:#555;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.contacto-card a{color:var(--p);font-weight:700;text-decoration:none}
+
+.spinner{width:16px;height:16px;border:2.5px solid rgba(123,47,190,.25);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-fila">
+    <div>
+      <h1>🎵 Portal de Músicas</h1>
+      <div class="sub">Puramente Danza 2026</div>
+    </div>
+    <a class="btn-volver" href="index.html">← Portal</a>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="dias-tabs">
+    <button class="btn-dia active" id="tab-sabado" onclick="cambiarDia('Sábado')">Sábado</button>
+    <button class="btn-dia" id="tab-domingo" onclick="cambiarDia('Domingo')">Domingo</button>
+  </div>
+
+  <div class="buscador-wrap">
+    <input type="text" id="buscar" placeholder="🔍 Buscar por obra o academia..." oninput="renderTodo()">
+    <button class="btn-limpiar" type="button" onclick="document.getElementById('buscar').value='';renderTodo()">✕ Limpiar</button>
+  </div>
+  <div class="buscador-wrap">
+    <label class="check-verificado" style="margin-left:0">
+      <input type="checkbox" id="filtroSinMusica" onchange="renderTodo()">
+      Mostrar solo los bailes sin música
+    </label>
+  </div>
+  <div id="resultado-info"></div>
+
+  <div id="resumen" class="resumen"></div>
+
+  <div class="actualizado" id="actualizado">
+    <button class="btn-actualizar" onclick="cargarTodo()">🔄 Actualizar</button>
+  </div>
+
+  <div id="contenido">
+    <div class="estado-box"><span class="spinner"></span> Cargando las músicas...</div>
+  </div>
+
+  <p class="leyenda">
+    Esta lista sigue el mismo orden publicado en "Orden de participación" y se actualiza
+    sola con cualquier cambio de música que suba una academia. El check de "Verificada"
+    se guarda solo en este navegador, como ayuda para ir marcando lo que ya escuchaste.
+  </p>
+
+  <div class="contacto-card">
+    ¿Falta o falla una música? Escribinos al <a href="https://wa.me/595994445463" target="_blank" rel="noopener">WhatsApp (0994) 445463</a>
+    o a <a href="mailto:puramentedanza@gmail.com">puramentedanza@gmail.com</a>
+  </div>
+
+</div>
+
+<script>
+window.addEventListener('error', (ev) => {
+  console.error('Error en la página:', ev.error || ev.message);
+});
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxTzNYtwXPeaE3PBGrGaooxstaHNFd1DcnPVPs2tKnqvse-9X1CSK2nSxRPqalJhGQYw/exec";
+const CLAVE_LOCAL = 'puramente_musicas_verificadas';
+
+let DIAS_DATA = { 'Sábado': [], 'Domingo': [] };
+let DIA_ACTUAL = 'Sábado';
+let CARGANDO = false;
+let verificadas = {}; // clave "dia:nro" -> true, guardado en este navegador (no en el servidor)
+
+function claveVerif(dia, nro){ return dia + ':' + nro; }
+
+function cargarVerificadasLocal(){
+  try {
+    const raw = localStorage.getItem(CLAVE_LOCAL);
+    verificadas = raw ? JSON.parse(raw) : {};
+  } catch(e){ verificadas = {}; }
+}
+function guardarVerificadasLocal(){
+  try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(verificadas)); } catch(e){}
+}
+
+function normalizarTexto(s){
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function escHtml(s){
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function cargarTodo(){
+  if(CARGANDO) return;
+  CARGANDO = true;
+  document.getElementById('contenido').innerHTML = '<div class="estado-box"><span class="spinner"></span> Cargando las músicas...</div>';
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=obtenerMusicas&_ts=' + Date.now(), {cache:'no-store'});
+    const json = await res.json();
+    if(json.ok){
+      DIAS_DATA = json.dias || { 'Sábado': [], 'Domingo': [] };
+      document.getElementById('actualizado').innerHTML =
+        'Actualizado ' + new Date().toLocaleTimeString('es-PY', {hour:'2-digit', minute:'2-digit'}) +
+        ' · <button class="btn-actualizar" onclick="cargarTodo()">🔄 Actualizar</button>';
+      renderTodo();
+    } else {
+      document.getElementById('contenido').innerHTML =
+        '<div class="estado-box error">❌ No se pudo cargar la información en este momento. Probá de nuevo en unos segundos.<br><br>' +
+        '<button class="btn-actualizar" onclick="cargarTodo()">🔄 Reintentar</button></div>';
+    }
+  }catch(err){
+    console.error(err);
+    document.getElementById('contenido').innerHTML =
+      '<div class="estado-box error">❌ No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.<br><br>' +
+      '<button class="btn-actualizar" onclick="cargarTodo()">🔄 Reintentar</button></div>';
+  }finally{
+    CARGANDO = false;
+  }
+}
+
+function cambiarDia(dia){
+  DIA_ACTUAL = dia;
+  document.getElementById('tab-sabado').classList.toggle('active', dia==='Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', dia==='Domingo');
+  renderTodo();
+}
+
+function renderTodo(){
+  const cont = document.getElementById('contenido');
+  const infoResultado = document.getElementById('resultado-info');
+  const resumen = document.getElementById('resumen');
+
+  const todasDelDia = DIAS_DATA[DIA_ACTUAL] || [];
+
+  if(!todasDelDia.length){
+    resumen.innerHTML = '';
+    infoResultado.textContent = '';
+    cont.innerHTML = `<div class="estado-box">Todavía no hay un orden publicado para ${DIA_ACTUAL} (o no se guardó música todavía). Volvé a mirar más cerca de la fecha del evento.</div>`;
+    return;
+  }
+
+  const total = todasDelDia.length;
+  const enVivo = todasDelDia.filter(o => o.enVivo).length;
+  const conMusica = todasDelDia.filter(o => !o.enVivo && o.musicaUrl).length;
+  const sinMusica = total - enVivo - conMusica;
+  const inconsistentes = todasDelDia.filter(o => o.tipoInconsistente).length;
+  const verifCount = todasDelDia.filter(o => verificadas[claveVerif(DIA_ACTUAL, o.nro)]).length;
+
+  resumen.innerHTML = `
+    <div class="chip">Total: <b>${total}</b></div>
+    <div class="chip">Con archivo: <b>${conMusica}</b></div>
+    <div class="chip">En vivo: <b>${enVivo}</b></div>
+    ${sinMusica > 0 ? `<div class="chip" style="color:var(--err)">Sin subir: <b>${sinMusica}</b></div>` : ''}
+    ${inconsistentes > 0 ? `<div class="chip" style="color:var(--err)">⚠️ Revisar tipo: <b>${inconsistentes}</b></div>` : ''}
+    <div class="chip">Verificadas: <b>${verifCount}</b></div>
+  `;
+
+  const termino = normalizarTexto(document.getElementById('buscar').value.trim());
+  const soloSinMusica = document.getElementById('filtroSinMusica').checked;
+  const obras = todasDelDia
+    .filter(o => !termino || normalizarTexto([o.obra, o.academia].filter(Boolean).join(' ')).includes(termino))
+    .filter(o => !soloSinMusica || (!o.enVivo && !o.musicaUrl));
+
+  if(!obras.length){
+    infoResultado.textContent = soloSinMusica
+      ? `No hay bailes sin música ${termino ? 'que coincidan con la búsqueda ' : ''}en ${DIA_ACTUAL}.`
+      : `Sin resultados para "${document.getElementById('buscar').value.trim()}" en ${DIA_ACTUAL}.`;
+    cont.innerHTML = `<div class="estado-box">${soloSinMusica ? '✅ No hay bailes sin música en ' + DIA_ACTUAL + '.' : 'No se encontraron obras que coincidan con la búsqueda en ' + DIA_ACTUAL + '.'}</div>`;
+    return;
+  }
+
+  infoResultado.textContent = (termino || soloSinMusica) ? `Mostrando ${obras.length} de ${total} obra(s) en ${DIA_ACTUAL}` : '';
+
+  cont.innerHTML = obras.map(o => {
+    const clave = claveVerif(DIA_ACTUAL, o.nro);
+    const verificada = !!verificadas[clave];
+    const metaBadges = `${o.categoria ? `<span class="badge b-cat">${escHtml(o.categoria)}</span>` : ''}${o.modalidad ? `<span class="badge b-mod">${escHtml(o.modalidad)}</span>` : ''}`;
+    return `
+      <div class="obra-card ${verificada ? 'verificada' : ''} ${termino ? 'resaltada' : ''}">
+        <div class="obra-top">
+          <div class="obra-nro">${o.nro}</div>
+          <div class="obra-info">
+            <div class="obra-titulo">${escHtml(o.obra || '(sin nombre)')}</div>
+            <div class="obra-academia">${escHtml(o.academia || '')}</div>
+            <div class="obra-meta">${metaBadges}${o.tipoParticipacion ? ' · ' + escHtml(o.tipoParticipacion) : ''}${o.duracion ? ' · ' + escHtml(o.duracion) : ''}</div>
+          </div>
+          ${o.enVivo ? '<span class="badge-estado badge-envivo">En vivo</span>' : (!o.musicaUrl ? '<span class="badge-estado badge-sinaudio">Sin música</span>' : (o.tipoInconsistente ? '<span class="badge-estado badge-revisar">⚠️ Revisar tipo</span>' : ''))}
+        </div>
+        ${o.tipoInconsistente ? '<div class="aviso-revisar">⚠️ Esta obra está marcada como "En vivo" en la planilla pero tiene un archivo de música cargado — revisar el campo "Tipo de música" en Inscripciones 2026.</div>' : ''}
+        <div class="obra-acciones">
+          ${o.musicaUrl ? `
+            <audio controls preload="none" src="${o.musicaUrl}"></audio>
+            <a class="btn-descarga" href="${o.musicaUrlDescarga || o.musicaUrl}" target="_blank" rel="noopener">⬇ Descargar</a>
+          ` : ''}
+          <label class="check-verificado">
+            <input type="checkbox" ${verificada ? 'checked' : ''} onchange="toggleVerificada('${DIA_ACTUAL}', '${o.nro}', this.checked)">
+            Verificada
+          </label>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.toggleVerificada = function(dia, nro, checked){
+  const clave = claveVerif(dia, nro);
+  if(checked) verificadas[clave] = true; else delete verificadas[clave];
+  guardarVerificadasLocal();
+  renderTodo();
+};
+
+cargarVerificadasLocal();
+cargarTodo();
+</script>
+</body>
+</html>
