@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!--
+  PURAMENTE DANZA 2026 — Panel de la Locutora (interno)
+  ----------------------------------------------------------------------
+  Herramienta de trabajo para el día del evento: muestra el orden ya
+  guardado de ambos días (Sábado/Domingo como pestañas) con las mismas
+  columnas que pidió Rebeca, MENOS "Día" (ahora es pestaña) y "ID
+  Inscripción" (se usa internamente para guardar el estado, pero no se
+  muestra).
+
+  Por cada obra hay tres botones para marcar en vivo cómo va la
+  competencia: "En espera", "En escenario" y "No se presenta". Cada
+  click guarda al toque en la hoja "Estado_En_Vivo" del backend, y esa
+  misma información es la que alimenta al portal público en vivo
+  (en-vivo.html).
+
+  Sin login (acceso libre, a pedido) — pensado para compartir el link
+  solo con quien está a cargo de locución/control, no para el público
+  general ni linkeado desde index.html.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Panel de la Locutora — Puramente Danza 2026</title>
+<link rel="icon" href="assets/iconos/favicon.ico" sizes="any">
+<meta name="theme-color" content="#7B2FBE">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#7B2FBE;--pd:#4E1D7F;--a:#F0C078;--txt:#2B2432;--txt-suave:#6E6079;--borde:#E4DAF0;--marfil:#FBF8FF;
+  --espera:#EDE3F9;--espera-txt:#4E1D7F;--escena:#7B2FBE;--escena-txt:#ffffff;--bailo:#1E8A5F;--bailo-bg:#DFF5EA;--nose:#F3F3F3;--nose-txt:#9A9A9A}
+body{background:var(--marfil);font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--txt);min-height:100vh;font-size:14px}
+a{color:inherit}
+
+.topbar{background:linear-gradient(90deg,var(--pd),var(--p));padding:.9rem 1.2rem;position:sticky;top:0;z-index:50;box-shadow:0 4px 14px rgba(53,19,79,.25)}
+.topbar-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:1200px;margin:0 auto}
+.topbar h1{color:#fff;font-size:.95rem;font-weight:800}
+.topbar .sub{color:var(--a);font-size:.72rem;font-weight:600;margin-top:1px}
+.btn-volver{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;padding:.35rem .8rem;border-radius:99px;font-size:.75rem;text-decoration:none;white-space:nowrap}
+
+.content{max-width:1200px;margin:0 auto;padding:1rem 1rem 3rem}
+
+.dias-tabs{display:flex;gap:.5rem;margin-bottom:.8rem}
+.btn-dia{flex:1;padding:.65rem;border:1.5px solid var(--p);border-radius:10px;background:#fff;color:var(--p);font-weight:700;font-size:.88rem;cursor:pointer}
+.btn-dia.active{background:var(--p);color:#fff}
+
+.actual-card{background:linear-gradient(90deg,var(--pd),var(--p));color:#fff;border-radius:14px;padding:.9rem 1.1rem;margin-bottom:.8rem;display:none}
+.actual-card.visible{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.actual-card .etiqueta{font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;opacity:.85;font-weight:700}
+.actual-card .titulo{font-size:1.05rem;font-weight:800;margin-top:2px}
+.actual-card .sub{font-size:.78rem;opacity:.9;margin-top:2px}
+.actual-card button{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;padding:.4rem .8rem;border-radius:99px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
+
+.buscador-wrap{display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap}
+#buscar{flex:1;min-width:180px;padding:.6rem .9rem;border:1.5px solid var(--borde);border-radius:10px;font-size:.86rem;outline:none}
+#buscar:focus{border-color:var(--p)}
+.btn-limpiar{background:none;border:1.5px solid var(--borde);border-radius:10px;padding:.55rem .85rem;font-size:.78rem;color:var(--txt-suave);cursor:pointer}
+#resultado-info{font-size:.74rem;color:var(--txt-suave);margin:-.25rem 0 .7rem}
+
+.actualizado{font-size:.72rem;color:var(--txt-suave);text-align:right;margin-bottom:.6rem}
+.btn-actualizar{background:none;border:none;color:var(--p);font-weight:700;font-size:.75rem;cursor:pointer;text-decoration:underline}
+
+.estado-box{background:#fff;border-radius:12px;padding:1.6rem 1.2rem;text-align:center;color:var(--txt-suave);font-size:.88rem;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.estado-box.error{color:#991B1B;background:#FEF2F2}
+
+.obra-card{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:.85rem 1rem;margin-bottom:.6rem;box-shadow:0 3px 12px rgba(53,19,79,.05)}
+.obra-card.es-escenario{border-color:var(--escena);box-shadow:0 4px 18px rgba(123,47,190,.25)}
+.obra-card.es-bailo{opacity:.6}
+.obra-card.es-nose{opacity:.55}
+.obra-card.resaltada{outline:2px solid var(--p)}
+
+.obra-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:.5rem}
+.obra-nro{font-size:1.3rem;font-weight:800;color:var(--pd);min-width:32px}
+.obra-info{flex:1;min-width:0}
+.obra-titulo{font-weight:700;font-size:.92rem}
+.obra-academia{font-size:.78rem;color:var(--txt-suave);margin-top:1px}
+.obra-meta{font-size:.72rem;color:var(--txt-suave);margin-top:4px;line-height:1.5}
+.obra-meta .badge{display:inline-block;padding:.1rem .5rem;border-radius:99px;font-size:.68rem;font-weight:700;margin-right:4px}
+.b-cat{background:#EDE3F9;color:var(--pd)}
+.b-mod{background:#FFF3E0;color:#9A6400}
+.b-tipo{background:#DCFCE7;color:#166534}
+.b-coreo{background:#FFE9F3;color:#9A2359}
+
+.estado-actual-badge{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:.2rem .6rem;border-radius:20px;white-space:nowrap}
+.badge-espera{background:var(--espera);color:var(--espera-txt)}
+.badge-escena{background:var(--escena);color:var(--escena-txt)}
+.badge-bailo{background:var(--bailo-bg);color:var(--bailo)}
+.badge-nose{background:var(--nose);color:var(--nose-txt)}
+
+.botones-estado{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn-estado{border:1.5px solid var(--borde);background:#fff;color:var(--txt-suave);padding:.4rem .7rem;border-radius:10px;font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-estado.activo-espera{background:var(--espera);border-color:var(--espera);color:var(--espera-txt)}
+.btn-estado.activo-escena{background:var(--escena);border-color:var(--escena);color:#fff}
+.btn-estado.activo-bailo{background:var(--bailo-bg);border-color:var(--bailo);color:var(--bailo)}
+.btn-estado.activo-nose{background:var(--nose);border-color:var(--nose);color:var(--nose-txt)}
+.btn-estado:disabled{opacity:.55;cursor:default}
+.btn-estado.btn-secundario{border-style:dashed;font-size:.7rem;opacity:.75}
+
+.spinner{width:16px;height:16px;border:2.5px solid rgba(123,47,190,.25);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-fila">
+    <div>
+      <h1>🎤 Panel de la Locutora</h1>
+      <div class="sub">Puramente Danza 2026 — uso interno</div>
+    </div>
+    <a class="btn-volver" href="orden.html">Orden completo →</a>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="dias-tabs">
+    <button class="btn-dia active" id="tab-sabado" onclick="cambiarDia('Sábado')">Sábado</button>
+    <button class="btn-dia" id="tab-domingo" onclick="cambiarDia('Domingo')">Domingo</button>
+  </div>
+
+  <div class="actual-card" id="actual-card">
+    <div>
+      <div class="etiqueta">Ahora en escenario</div>
+      <div class="titulo" id="actual-titulo">—</div>
+      <div class="sub" id="actual-sub">—</div>
+      <div class="sub" id="actual-cronometro"></div>
+    </div>
+    <button type="button" onclick="irAObraActual()">Ir a esta obra ↓</button>
+  </div>
+
+  <div class="buscador-wrap">
+    <input type="text" id="buscar" placeholder="🔍 Buscar por obra o academia..." oninput="renderTodo()">
+    <button class="btn-limpiar" type="button" onclick="document.getElementById('buscar').value='';renderTodo()">✕ Limpiar</button>
+  </div>
+  <div id="resultado-info"></div>
+
+  <div class="actualizado" id="actualizado">
+    <button class="btn-actualizar" onclick="cargarTodo()">🔄 Actualizar</button>
+  </div>
+
+  <div id="contenido">
+    <div class="estado-box"><span class="spinner"></span> Cargando el orden...</div>
+  </div>
+
+</div>
+
+<script>
+window.addEventListener('error', (ev) => {
+  console.error('Error en la página:', ev.error || ev.message);
+});
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxTzNYtwXPeaE3PBGrGaooxstaHNFd1DcnPVPs2tKnqvse-9X1CSK2nSxRPqalJhGQYw/exec";
+// "En espera" es el estado por defecto de toda obra (no hace falta
+// tocar nada para que empiece ahí) — por eso no tiene botón propio en la
+// fila principal, solo uno chico aparte para deshacer un click hecho de
+// más. Los tres botones principales son los que se usan en vivo mientras
+// avanza la función.
+const ESTADOS_PRINCIPALES = ['En escenario', 'No se presenta'];
+const ICONOS_ESTADO = { 'En espera': '⏳', 'En escenario': '🎭', 'Ya bailó': '✅', 'No se presenta': '🚫' };
+const AUTO_REFRESH_MS = 20000; // por si se usa desde más de un dispositivo a la vez
+
+let DIAS_DATA = { 'Sábado': [], 'Domingo': [] };
+let DIA_ACTUAL = 'Sábado';
+let CARGANDO = false;
+let GUARDANDO = {}; // idInscripcion -> true mientras se está guardando ese click
+let timerAutoBailo = null; // { idInscripcion, handle } — el setTimeout que marca "Ya bailó" solo
+let obraEnEscenarioInfo = null; // { idInscripcion, duracionSeg, inicioMs } — para el cronómetro visual
+
+function escHtml(s){
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function normalizarTexto(s){
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function claseEstado(estado){
+  if(estado === 'En escenario') return 'escena';
+  if(estado === 'Ya bailó') return 'bailo';
+  if(estado === 'No se presenta') return 'nose';
+  return 'espera';
+}
+function duracionASegundos(dur){
+  if(!dur) return 0;
+  const partes = String(dur).split(':').map(Number);
+  if(partes.length >= 2) return (partes[0]||0)*60 + (partes[1]||0);
+  return 0;
+}
+function formatearMMSS(totalSeg){
+  const seg = Math.max(0, Math.round(totalSeg));
+  const m = Math.floor(seg/60);
+  const s = seg%60;
+  return m + ':' + String(s).padStart(2,'0');
+}
+
+async function cargarTodo(silencioso){
+  if(CARGANDO) return;
+  CARGANDO = true;
+  if(!silencioso){
+    document.getElementById('contenido').innerHTML = '<div class="estado-box"><span class="spinner"></span> Cargando el orden...</div>';
+  }
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=ordenLocutora&_ts=' + Date.now(), {cache:'no-store'});
+    const json = await res.json();
+    if(json.ok){
+      DIAS_DATA = json.dias || { 'Sábado': [], 'Domingo': [] };
+      document.getElementById('actualizado').innerHTML =
+        'Actualizado ' + new Date().toLocaleTimeString('es-PY', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) +
+        ' · <button class="btn-actualizar" onclick="cargarTodo()">🔄 Actualizar</button>';
+      renderTodo();
+      sincronizarTimerAutomatico();
+    } else if(!silencioso){
+      document.getElementById('contenido').innerHTML =
+        '<div class="estado-box error">❌ No se pudo cargar el orden. Probá de nuevo en unos segundos.<br><br>' +
+        '<button class="btn-actualizar" onclick="cargarTodo()">🔄 Reintentar</button></div>';
+    }
+  }catch(err){
+    console.error(err);
+    if(!silencioso){
+      document.getElementById('contenido').innerHTML =
+        '<div class="estado-box error">❌ No se pudo conectar con el servidor. Revisá la conexión y probá de nuevo.<br><br>' +
+        '<button class="btn-actualizar" onclick="cargarTodo()">🔄 Reintentar</button></div>';
+    }
+  }finally{
+    CARGANDO = false;
+  }
+}
+
+function cambiarDia(dia){
+  DIA_ACTUAL = dia;
+  document.getElementById('tab-sabado').classList.toggle('active', dia==='Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', dia==='Domingo');
+  renderTodo();
+  sincronizarTimerAutomatico();
+}
+
+function irAObraActual(){
+  const el = document.querySelector('.obra-card.es-escenario');
+  if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/**
+ * Arranca (o mantiene) el cronómetro que marca "Ya bailó" solo cuando
+ * pasa la duración de la música de la obra que está "En escenario". Se
+ * llama después de cada carga de datos, así que funciona igual si el
+ * click vino de este mismo dispositivo o de otro (ej. dos personas
+ * usando el panel a la vez), y se recalcula el tiempo restante en base
+ * a "actualizado" (cuándo se tocó "En escenario" en el servidor) en vez
+ * de arrancar de cero cada vez.
+ */
+function sincronizarTimerAutomatico(){
+  const todasDelDia = DIAS_DATA[DIA_ACTUAL] || [];
+  const enEscenario = todasDelDia.find(o => o.estado === 'En escenario');
+
+  if(!enEscenario){
+    cancelarTimerAutomatico();
+    return;
+  }
+  if(timerAutoBailo && timerAutoBailo.idInscripcion === enEscenario.idInscripcion){
+    return; // ya está corriendo el cronómetro de esta misma obra, no reiniciar
+  }
+  cancelarTimerAutomatico();
+
+  const duracionSeg = duracionASegundos(enEscenario.duracion);
+  if(!duracionSeg){
+    obraEnEscenarioInfo = null;
+    actualizarCronometroVisual();
+    return; // sin duración cargada — no se puede automatizar, queda solo el botón manual
+  }
+
+  const inicioMs = enEscenario.actualizado ? new Date(enEscenario.actualizado).getTime() : Date.now();
+  obraEnEscenarioInfo = { idInscripcion: enEscenario.idInscripcion, duracionSeg, inicioMs };
+  actualizarCronometroVisual();
+
+  const restanteSeg = duracionSeg - (Date.now() - inicioMs) / 1000;
+  const idProgramada = enEscenario.idInscripcion;
+  if(restanteSeg <= 0){
+    // Se cargó la página después de que ya pasó el tiempo (ej. recién se
+    // abrió el panel) — marcamos "Ya bailó" directo, sin esperar.
+    marcarEstado(idProgramada, 'Ya bailó');
+    return;
+  }
+  const handle = setTimeout(() => {
+    if(timerAutoBailo && timerAutoBailo.idInscripcion === idProgramada){
+      marcarEstado(idProgramada, 'Ya bailó');
+    }
+  }, restanteSeg * 1000);
+  timerAutoBailo = { idInscripcion: idProgramada, handle };
+}
+
+function cancelarTimerAutomatico(){
+  if(timerAutoBailo){
+    clearTimeout(timerAutoBailo.handle);
+    timerAutoBailo = null;
+  }
+  obraEnEscenarioInfo = null;
+  actualizarCronometroVisual();
+}
+
+/** Actualiza el texto del cronómetro cada segundo, sin re-renderizar toda la lista. */
+function actualizarCronometroVisual(){
+  const el = document.getElementById('actual-cronometro');
+  if(!el) return;
+  if(!obraEnEscenarioInfo){
+    el.textContent = '';
+    return;
+  }
+  const restanteSeg = obraEnEscenarioInfo.duracionSeg - (Date.now() - obraEnEscenarioInfo.inicioMs) / 1000;
+  if(restanteSeg > 0){
+    el.textContent = '🎵 Termina en ' + formatearMMSS(restanteSeg) + ' — pasa a "Ya bailó" sola';
+  } else {
+    el.textContent = '🎵 Ya debería haber terminado — marcando "Ya bailó"...';
+  }
+}
+setInterval(actualizarCronometroVisual, 1000);
+
+function renderTodo(){
+  const cont = document.getElementById('contenido');
+  const infoResultado = document.getElementById('resultado-info');
+  const todasDelDia = DIAS_DATA[DIA_ACTUAL] || [];
+
+  const enEscenario = todasDelDia.find(o => o.estado === 'En escenario');
+  const actualCard = document.getElementById('actual-card');
+  if(enEscenario){
+    actualCard.classList.add('visible');
+    document.getElementById('actual-titulo').textContent = '#' + enEscenario.posicion + ' — ' + enEscenario.obra;
+    document.getElementById('actual-sub').textContent = enEscenario.academia;
+  } else {
+    actualCard.classList.remove('visible');
+  }
+
+  if(!todasDelDia.length){
+    infoResultado.textContent = '';
+    cont.innerHTML = `<div class="estado-box">Todavía no hay un orden guardado para ${DIA_ACTUAL}. Guardalo desde el panel admin (pestaña Orden Tentativo).</div>`;
+    return;
+  }
+
+  const termino = normalizarTexto(document.getElementById('buscar').value.trim());
+  const obras = todasDelDia.filter(o => !termino || normalizarTexto([o.obra, o.academia].filter(Boolean).join(' ')).includes(termino));
+
+  if(!obras.length){
+    infoResultado.textContent = `Sin resultados para "${document.getElementById('buscar').value.trim()}" en ${DIA_ACTUAL}.`;
+    cont.innerHTML = `<div class="estado-box">No se encontraron obras que coincidan con la búsqueda en ${DIA_ACTUAL}.</div>`;
+    return;
+  }
+  infoResultado.textContent = termino ? `Mostrando ${obras.length} de ${todasDelDia.length} obra(s) en ${DIA_ACTUAL}` : '';
+
+  cont.innerHTML = obras.map(o => {
+    const clase = claseEstado(o.estado);
+    const guardandoEsta = !!GUARDANDO[o.idInscripcion];
+    const metaBadges = `
+      ${o.categoria ? `<span class="badge b-cat">${escHtml(o.categoria)}</span>` : ''}
+      ${o.modalidad ? `<span class="badge b-mod">${escHtml(o.modalidad)}</span>` : ''}
+      ${o.tipoParticipacion ? `<span class="badge b-tipo">${escHtml(o.tipoParticipacion)}</span>` : ''}
+      ${o.competeCoreografia === 'Sí' ? `<span class="badge b-coreo">Compite por coreografía</span>` : ''}
+    `;
+    return `
+      <div class="obra-card es-${clase} ${termino ? 'resaltada' : ''}">
+        <div class="obra-top">
+          <div class="obra-nro">${o.posicion}</div>
+          <div class="obra-info">
+            <div class="obra-titulo">${escHtml(o.obra || '(sin nombre)')}</div>
+            <div class="obra-academia">${escHtml(o.academia || '')}</div>
+            <div class="obra-meta">
+              ${metaBadges}
+              ${o.participantes ? '<br>👤 ' + escHtml(o.participantes) : ''}
+              ${o.coreografo ? '<br>🎬 Coreógrafa/o: ' + escHtml(o.coreografo) : ''}
+            </div>
+          </div>
+          <span class="estado-actual-badge badge-${clase}">${escHtml(o.estado)}</span>
+        </div>
+        <div class="botones-estado">
+          ${ESTADOS_PRINCIPALES.map(estado => `
+            <button type="button" class="btn-estado ${o.estado === estado ? 'activo-' + claseEstado(estado) : ''}"
+              ${guardandoEsta ? 'disabled' : ''}
+              onclick="marcarEstado('${o.idInscripcion}', '${estado}')">
+              ${ICONOS_ESTADO[estado]} ${estado}
+            </button>
+          `).join('')}
+          ${o.estado === 'En escenario' ? `
+            <button type="button" class="btn-estado btn-secundario"
+              ${guardandoEsta ? 'disabled' : ''}
+              onclick="marcarEstado('${o.idInscripcion}', 'Ya bailó')">
+              ✅ Ya bailó (a mano)
+            </button>
+          ` : ''}
+          ${o.estado !== 'En espera' ? `
+            <button type="button" class="btn-estado btn-secundario"
+              ${guardandoEsta ? 'disabled' : ''}
+              onclick="marcarEstado('${o.idInscripcion}', 'En espera')">
+              ↩️ Deshacer (volver a en espera)
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function marcarEstado(idInscripcion, estado){
+  GUARDANDO[idInscripcion] = true;
+  renderTodo();
+  try{
+    const fd = new FormData();
+    fd.append('action', 'guardarEstadoEnVivo');
+    fd.append('idInscripcion', idInscripcion);
+    fd.append('estado', estado);
+    const res = await fetch(SCRIPT_URL, {method:'POST', body:fd});
+    const json = await res.json();
+    if(!json.ok){
+      alert('No se pudo guardar el estado: ' + (json.error || 'error desconocido'));
+    }
+    await cargarTodo(true);
+  }catch(err){
+    console.error(err);
+    alert('No se pudo conectar con el servidor para guardar el estado. Probá de nuevo.');
+  }finally{
+    delete GUARDANDO[idInscripcion];
+    renderTodo();
+  }
+}
+
+document.getElementById('tab-sabado').onclick = () => cambiarDia('Sábado');
+document.getElementById('tab-domingo').onclick = () => cambiarDia('Domingo');
+
+// El día del evento (5 y 6 de septiembre de 2026), esta pantalla se abre
+// directo en el día que corresponde y esconde la pestaña del otro día,
+// para que no haya forma de confundirse en medio de la función. Fuera de
+// esas dos fechas (armando todo antes del evento, por ejemplo) se ven las
+// dos pestañas normal, como hasta ahora.
+const FECHA_SABADO = '2026-09-05';
+const FECHA_DOMINGO = '2026-09-06';
+
+function fechaLocalHoy(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function aplicarDiaFijoDelEvento(){
+  const hoy = fechaLocalHoy();
+  let diaFijo = null;
+  if(hoy === FECHA_SABADO) diaFijo = 'Sábado';
+  else if(hoy === FECHA_DOMINGO) diaFijo = 'Domingo';
+  if(!diaFijo) return;
+
+  DIA_ACTUAL = diaFijo;
+  document.getElementById('tab-sabado').style.display = diaFijo === 'Sábado' ? '' : 'none';
+  document.getElementById('tab-domingo').style.display = diaFijo === 'Domingo' ? '' : 'none';
+  document.getElementById('tab-sabado').classList.toggle('active', diaFijo === 'Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', diaFijo === 'Domingo');
+}
+
+aplicarDiaFijoDelEvento();
+cargarTodo();
+setInterval(() => cargarTodo(true), AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
