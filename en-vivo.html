@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!--
+  PURAMENTE DANZA 2026 — Orden en vivo (público)
+  ----------------------------------------------------------------------
+  Página pública de solo lectura: muestra en tiempo real (se actualiza
+  sola cada pocos segundos) cómo va avanzando la competencia, a partir
+  del mismo estado que va marcando la locutora en locutora.html (En
+  espera / En escenario / No se presenta).
+
+  Gated por el mismo interruptor "Publicar" que usa "Orden de
+  participación" — un día recién se ve acá cuando la organización lo
+  publicó. No pide login, no tiene botones, no muestra nada sensible.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Orden en vivo — Puramente Danza 2026</title>
+<link rel="icon" href="assets/iconos/favicon.ico" sizes="any">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7B2FBE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Puramente Danza">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#7B2FBE;--pd:#4E1D7F;--a:#F0C078;--txt:#2B2432;--txt-suave:#6E6079;--borde:#E4DAF0;--marfil:#FBF8FF}
+body{
+  background:var(--marfil);
+  font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--txt);min-height:100vh;font-size:14px;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+a{color:inherit}
+
+.topbar{background:linear-gradient(90deg,var(--pd),var(--p));padding:.9rem 1.2rem;position:sticky;top:0;z-index:50;box-shadow:0 4px 14px rgba(53,19,79,.25)}
+.topbar-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:0 auto}
+.topbar h1{color:#fff;font-size:.95rem;font-weight:800}
+.topbar .sub{color:var(--a);font-size:.72rem;font-weight:600;margin-top:1px;display:flex;align-items:center;gap:5px}
+.punto-vivo{width:7px;height:7px;border-radius:50%;background:#4ADE80;display:inline-block;animation:pulso 1.4s infinite}
+@keyframes pulso{0%,100%{opacity:1}50%{opacity:.3}}
+
+.content{max-width:760px;margin:0 auto;padding:1.1rem 1rem 3rem}
+
+.dias-tabs{display:flex;gap:.5rem;margin-bottom:1rem}
+.btn-dia{flex:1;padding:.65rem;border:1.5px solid var(--p);border-radius:10px;background:#fff;color:var(--p);font-weight:700;font-size:.88rem;cursor:pointer}
+.btn-dia.active{background:var(--p);color:#fff}
+
+.estado-box{background:#fff;border-radius:12px;padding:1.6rem 1.2rem;text-align:center;color:var(--txt-suave);font-size:.88rem;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.estado-box.error{color:#991B1B;background:#FEF2F2}
+
+.actual-card{background:linear-gradient(135deg,var(--pd),var(--p));color:#fff;border-radius:18px;padding:1.4rem 1.3rem;margin-bottom:1.1rem;box-shadow:0 8px 28px rgba(78,29,127,.3)}
+.actual-card .etiqueta{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;opacity:.85;font-weight:800;display:flex;align-items:center;gap:6px}
+.actual-card .nro{font-size:2.6rem;font-weight:800;line-height:1.1;margin-top:.3rem}
+.actual-card .titulo{font-size:1.25rem;font-weight:800;margin-top:.15rem}
+.actual-card .academia{font-size:.9rem;opacity:.92;margin-top:.15rem}
+.actual-card .meta{font-size:.78rem;opacity:.85;margin-top:.5rem}
+
+.seccion-titulo{font-size:.78rem;font-weight:800;color:var(--txt-suave);text-transform:uppercase;letter-spacing:.6px;margin:1.1rem 0 .5rem}
+
+.fila{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--borde);border-radius:12px;padding:.6rem .85rem;margin-bottom:.45rem}
+.fila.hecha{opacity:.5}
+.fila.saltada{opacity:.55;text-decoration:line-through;text-decoration-color:#C62855}
+.fila .nro{font-weight:800;color:var(--pd);min-width:28px;font-size:.95rem}
+.fila .info{flex:1;min-width:0}
+.fila .obra{font-weight:700;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila .academia{font-size:.74rem;color:var(--txt-suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila .tag{font-size:.66rem;font-weight:800;text-transform:uppercase;padding:.15rem .5rem;border-radius:20px;white-space:nowrap}
+.tag-saltada{background:#FBDDE6;color:#C62855}
+
+.ver-mas{text-align:center;margin-top:.4rem}
+.btn-ver-mas{background:none;border:1.5px solid var(--borde);border-radius:10px;padding:.5rem 1rem;font-size:.78rem;color:var(--p);font-weight:700;cursor:pointer}
+
+.leyenda{font-size:.75rem;color:var(--txt-suave);text-align:center;margin:1.4rem auto 0;max-width:520px;line-height:1.5}
+.contacto-card{background:#fff;border-radius:12px;padding:1rem 1.2rem;margin-top:1.2rem;font-size:.82rem;color:#555;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.contacto-card a{color:var(--p);font-weight:700;text-decoration:none}
+
+.spinner{width:16px;height:16px;border:2.5px solid rgba(123,47,190,.25);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-fila">
+    <div>
+      <h1>🩰 Orden en vivo</h1>
+      <div class="sub"><span class="punto-vivo"></span> Puramente Danza 2026</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="dias-tabs">
+    <button class="btn-dia active" id="tab-sabado" onclick="cambiarDia('Sábado')">Sábado</button>
+    <button class="btn-dia" id="tab-domingo" onclick="cambiarDia('Domingo')">Domingo</button>
+  </div>
+
+  <div id="contenido">
+    <div class="estado-box"><span class="spinner"></span> Cargando...</div>
+  </div>
+
+  <p class="leyenda">
+    Esta página se actualiza sola cada pocos segundos. El orden y los horarios
+    son estimados y pueden cambiar hasta último momento.
+  </p>
+
+  <div class="contacto-card">
+    ¿Dudas? Escribinos al <a href="https://wa.me/595994445463" target="_blank" rel="noopener">WhatsApp (0994) 445463</a>
+    o a <a href="mailto:puramentedanza@gmail.com">puramentedanza@gmail.com</a>
+  </div>
+
+</div>
+
+<script>
+window.addEventListener('error', (ev) => {
+  console.error('Error en la página:', ev.error || ev.message);
+});
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxTzNYtwXPeaE3PBGrGaooxstaHNFd1DcnPVPs2tKnqvse-9X1CSK2nSxRPqalJhGQYw/exec";
+const AUTO_REFRESH_MS = 6000;
+const MOSTRAR_PROXIMAS = 6; // cuántas obras "en espera" mostrar antes de "Ver más"
+
+let DIAS_DATA = { 'Sábado': [], 'Domingo': [] };
+let DIA_ACTUAL = 'Sábado';
+let CARGANDO = false;
+let mostrarTodasProximas = false;
+
+function escHtml(s){
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function cargarTodo(silencioso){
+  if(CARGANDO) return;
+  CARGANDO = true;
+  if(!silencioso){
+    document.getElementById('contenido').innerHTML = '<div class="estado-box"><span class="spinner"></span> Cargando...</div>';
+  }
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=ordenEnVivo&_ts=' + Date.now(), {cache:'no-store'});
+    const json = await res.json();
+    if(json.ok){
+      DIAS_DATA = json.dias || { 'Sábado': [], 'Domingo': [] };
+      renderTodo();
+    } else if(!silencioso){
+      document.getElementById('contenido').innerHTML = '<div class="estado-box error">❌ No se pudo cargar la información. Reintentando solo...</div>';
+    }
+  }catch(err){
+    console.error(err);
+    if(!silencioso){
+      document.getElementById('contenido').innerHTML = '<div class="estado-box error">❌ No se pudo conectar. Reintentando solo...</div>';
+    }
+  }finally{
+    CARGANDO = false;
+  }
+}
+
+function cambiarDia(dia){
+  DIA_ACTUAL = dia;
+  mostrarTodasProximas = false;
+  document.getElementById('tab-sabado').classList.toggle('active', dia==='Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', dia==='Domingo');
+  renderTodo();
+}
+
+window.verMasProximas = function(){
+  mostrarTodasProximas = true;
+  renderTodo();
+};
+
+function renderTodo(){
+  const cont = document.getElementById('contenido');
+  const todasDelDia = DIAS_DATA[DIA_ACTUAL] || [];
+
+  if(!todasDelDia.length){
+    cont.innerHTML = `<div class="estado-box">Todavía no hay un orden publicado para ${DIA_ACTUAL}. Volvé a mirar más cerca de la fecha del evento.</div>`;
+    return;
+  }
+
+  const idxActual = todasDelDia.findIndex(o => o.estado === 'En escenario');
+  const actual = idxActual >= 0 ? todasDelDia[idxActual] : null;
+
+  let html = '';
+
+  if(actual){
+    html += `
+      <div class="actual-card">
+        <div class="etiqueta">🎭 En escenario ahora</div>
+        <div class="nro">#${actual.posicion}</div>
+        <div class="titulo">${escHtml(actual.obra)}</div>
+        <div class="academia">${escHtml(actual.academia)}</div>
+        <div class="meta">${escHtml(actual.categoria||'')}${actual.modalidad ? ' · ' + escHtml(actual.modalidad) : ''}</div>
+      </div>
+    `;
+  } else {
+    html += `<div class="estado-box">Todavía no arrancó ninguna obra de ${DIA_ACTUAL} en escena.</div>`;
+  }
+
+  // Ya presentadas (todo lo anterior a la actual, o todo si ya no hay
+  // ninguna "en escenario" y hubo alguna marcada antes) — se muestran
+  // colapsadas, más chicas, para no alargar la página.
+  const anteriores = idxActual >= 0 ? todasDelDia.slice(0, idxActual) : [];
+  const proximas = idxActual >= 0 ? todasDelDia.slice(idxActual + 1) : todasDelDia;
+
+  if(anteriores.length){
+    html += `<div class="seccion-titulo">Ya se presentaron (${anteriores.length})</div>`;
+    html += anteriores.map(o => filaHtml(o, true)).join('');
+  }
+
+  if(proximas.length){
+    html += `<div class="seccion-titulo">Siguen en el orden</div>`;
+    const aMostrar = mostrarTodasProximas ? proximas : proximas.slice(0, MOSTRAR_PROXIMAS);
+    html += aMostrar.map(o => filaHtml(o, false)).join('');
+    if(!mostrarTodasProximas && proximas.length > MOSTRAR_PROXIMAS){
+      html += `<div class="ver-mas"><button class="btn-ver-mas" onclick="verMasProximas()">Ver las ${proximas.length - MOSTRAR_PROXIMAS} restantes ↓</button></div>`;
+    }
+  }
+
+  cont.innerHTML = html;
+}
+
+function filaHtml(o, yaPaso){
+  const saltada = o.estado === 'No se presenta';
+  const clase = saltada ? 'saltada' : (yaPaso ? 'hecha' : '');
+  return `
+    <div class="fila ${clase}">
+      <div class="nro">${o.posicion}</div>
+      <div class="info">
+        <div class="obra">${escHtml(o.obra || '(sin nombre)')}</div>
+        <div class="academia">${escHtml(o.academia || '')}</div>
+      </div>
+      ${saltada ? '<span class="tag tag-saltada">No se presentó</span>' : ''}
+    </div>
+  `;
+}
+
+cargarTodo();
+setInterval(() => cargarTodo(true), AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
