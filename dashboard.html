@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puramente Danza 2026 — Dashboard de Resultados</title>
+<style>
+  :root{
+    --p:#7B2FBE; --pd:#4E1D7F; --a:#F0C078; --a2:#C9A6EA;
+    --bg:#F4F1F8; --bg-elev:#FFFBFE; --txt:#2B2432; --muted:#7a5f74;
+    --line:#E4DAF0; --err:#C53030; --ok:#16A34A;
+    --oro:#c9a227; --plata:#9a9a9a; --bronce:#b0702f; --desierto:#8a7d63;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;}
+  .app{max-width:1300px;margin:0 auto;padding:24px 28px 60px;}
+
+  .login-box{max-width:360px;margin:80px auto;background:var(--bg-elev);border:1px solid var(--line);
+    border-radius:16px;padding:32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.08);}
+  .login-box .titulo-login{font-size:20px;font-weight:700;color:var(--pd);margin-bottom:6px;}
+  .login-box .sub-login{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:18px;}
+  .login-box input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:13px;font-size:15px;margin:14px 0;text-align:center;}
+  .login-box button{width:100%;background:linear-gradient(90deg,var(--p),var(--a2));color:#fff;border:none;border-radius:10px;
+    padding:13px;font-size:14px;font-weight:700;cursor:pointer;}
+  .login-error{color:var(--err);font-size:12.5px;margin-top:10px;min-height:16px;}
+
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+    padding-bottom:18px;border-bottom:2px solid var(--p);margin-bottom:20px;}
+  header .titulo{font-size:22px;font-weight:700;color:var(--pd);}
+  header .sub{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+  .filtros{display:flex;gap:8px;align-items:center;}
+  .filtros select{background:var(--bg-elev);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:9px 14px;font-size:14px;}
+  .estado{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);}
+
+  .grid-medallas{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+  .card-medalla{background:var(--bg-elev);border:1px solid var(--line);border-radius:16px;
+    padding:22px;text-align:center;}
+  .card-medalla .num{font-size:44px;font-weight:800;}
+  .card-medalla .label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:4px;}
+  .card-medalla.oro .num{color:var(--oro);}
+  .card-medalla.plata .num{color:var(--plata);}
+  .card-medalla.bronce .num{color:var(--bronce);}
+  .card-medalla.desierto .num{color:var(--desierto);}
+
+  .panel-locutora{background:linear-gradient(135deg, var(--pd), var(--p));color:#fff;border-radius:16px;
+    padding:20px 22px;margin-bottom:20px;}
+  .panel-locutora h2{font-size:13px;margin:0 0 14px;text-transform:uppercase;letter-spacing:1.5px;
+    display:flex;align-items:center;gap:8px;color:#fff;opacity:.92;}
+  .locutora-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .locutora-grid.una-columna{grid-template-columns:1fr;}
+  @media (max-width: 760px){ .locutora-grid{grid-template-columns:1fr;} }
+  .locutora-dia{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:16px;}
+  .locutora-dia-titulo{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;opacity:.8;margin-bottom:8px;}
+  .locutora-actual-obra{font-size:17px;font-weight:700;}
+  .locutora-actual-academia{font-size:12.5px;opacity:.85;margin-top:2px;}
+  .locutora-crono{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:8px;}
+  .locutora-crono.sin-crono{font-size:13px;font-weight:400;opacity:.75;}
+  .locutora-proxima{font-size:12.5px;opacity:.85;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.18);}
+  .locutora-progreso{font-size:11.5px;opacity:.75;margin-top:8px;}
+  .locutora-estimado{font-size:12px;opacity:.85;margin-top:4px;font-weight:600;}
+  .locutora-vacio{font-size:13px;opacity:.8;padding:10px 0;}
+
+  .secciones{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;}
+  @media (max-width: 900px){ .secciones{grid-template-columns:1fr;} }
+
+  .panel{background:var(--bg-elev);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:24px;}
+  .panel h2{font-size:15px;color:var(--pd);margin:0 0 16px;text-transform:uppercase;letter-spacing:1px;
+    border-bottom:1px solid var(--line);padding-bottom:10px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;
+    padding:6px 8px;border-bottom:2px solid var(--line);}
+  table td{padding:9px 8px;border-bottom:1px solid var(--line);}
+  table tr:last-child td{border-bottom:none;}
+  .rank-num{font-weight:800;color:var(--pd);width:26px;display:inline-block;}
+  .centro{text-align:center;}
+
+  .mencion-grupo{margin-bottom:10px;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:var(--bg);}
+  .mencion-grupo:last-child{margin-bottom:0;}
+  .mencion-grupo-titulo{font-size:13px;font-weight:700;color:var(--pd);
+    padding:12px 0;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;}
+  .mencion-grupo-titulo::-webkit-details-marker{display:none;}
+  .mencion-grupo-titulo::before{content:'▸';color:var(--p);transition:transform .15s;display:inline-block;}
+  .mencion-grupo[open] .mencion-grupo-titulo::before{transform:rotate(90deg);}
+  .mencion-grupo table{margin-bottom:12px;}
+  .mencion-cant{font-weight:400;color:var(--muted);font-size:11px;}
+
+  .empty-msg{color:var(--muted);font-size:13px;text-align:center;padding:20px;}
+  .btn-secundario{background:none;border:1.5px solid var(--p);color:var(--pd);
+    border-radius:10px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+  .estado-ok{color:var(--ok);font-weight:700;}
+  .estado-error{color:var(--err);font-weight:700;}
+  .estado-pendiente{color:var(--muted);}
+  .tabla-scroll{max-height:420px;overflow-y:auto;}
+  .panel-full{grid-column:1 / -1;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="login-box" id="loginBox">
+    <div class="titulo-login">Puramente Danza 2026</div>
+    <div class="sub-login">Dashboard de Resultados</div>
+    <input type="password" id="passwordInput" placeholder="Contraseña de admin">
+    <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); justify-content:center; margin:-6px 0 10px; text-transform:none; letter-spacing:0;">
+      <input type="checkbox" id="mostrarPassword" onchange="document.getElementById('passwordInput').type = this.checked ? 'text' : 'password';" style="width:auto;">
+      Mostrar contraseña
+    </label>
+    <button onclick="intentarLogin()">Ingresar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+
+  <div id="contenidoDashboard" style="display:none;">
+    <header>
+      <div>
+        <div class="titulo">Dashboard de Resultados</div>
+        <div class="sub">Puramente Danza 2026 · Solo uso interno</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div class="filtros">
+          <select id="diaFiltro">
+            <option value="todos">Todos los días</option>
+            <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+        </div>
+        <div class="estado"><span class="dot" id="dot"></span><span id="estadoTexto">Actualizado ahora</span></div>
+      </div>
+    </header>
+
+    <div class="panel-locutora">
+      <h2>🎙️ Panel de la locutora — en vivo</h2>
+      <div id="locutora-en-vivo"></div>
+    </div>
+
+    <div class="grid-medallas" id="grid-medallas"></div>
+
+    <div class="secciones">
+      <div>
+        <div class="panel">
+          <h2>🏆 Academias con más premios</h2>
+          <div id="tabla-academias"></div>
+        </div>
+        <div class="panel">
+          <h2>🎭 Recuento por tipo de participación</h2>
+          <div id="tabla-tipos"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h2>⭐ Menciones especiales</h2>
+          <div id="tabla-menciones"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-full">
+      <h2>📋 Orden de baile en tiempo real — estado de devoluciones</h2>
+      <div class="tabla-scroll" id="tabla-orden"></div>
+    </div>
+
+    <div class="panel panel-full">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 style="margin:0; border:none; padding:0;">🏅 Orden de baile — resultados</h2>
+        <button class="btn-secundario" onclick="descargarOrdenResultados()">⬇ Descargar PDF</button>
+      </div>
+      <div class="tabla-scroll" id="tabla-orden-resultados"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.addEventListener('error', (ev) => {
+  console.error('Error no capturado:', ev.error || ev.message);
+});
+window.addEventListener('unhandledrejection', (ev) => {
+  console.error('Error no capturado:', ev.reason);
+});
+
+/* Backend del jurado (Code_Jurado.gs) — dashboardResultados, protegido con
+   la misma contraseña que el Panel Admin de Juzgamiento. */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyks-M48ngn0Vhrhmyx_GgcNU5EAdId9ZTLUbHvAO2LXuZmCW_p0n8pRapccx_aKfq6Iw/exec';
+/* Backend de inscripciones (Code.gs) — ordenLocutora, sin contraseña (es
+   el mismo dato que ve el panel de la locutora). */
+const SCRIPT_URL_LOCUTORA = 'https://script.google.com/macros/s/AKfycbwxTzNYtwXPeaE3PBGrGaooxstaHNFd1DcnPVPs2tKnqvse-9X1CSK2nSxRPqalJhGQYw/exec';
+
+const REFRESCO_MS = 20000;
+let PASSWORD = null; // solo en memoria de esta sesión, nunca guardado en el dispositivo
+let ultimaData = { obras: [], menciones: [] };
+let ordenLocutoraData = { 'Sábado': [], 'Domingo': [] };
+
+async function intentarLogin(){
+  const val = document.getElementById('passwordInput').value.trim();
+  const err = document.getElementById('loginError');
+  if(!val) return;
+  err.textContent = 'Verificando…';
+  try{
+    const params = new URLSearchParams({ action: 'dashboardResultados', password: val });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok && json.error === 'Contraseña incorrecta'){
+      err.textContent = 'Contraseña incorrecta.';
+      return;
+    }
+    PASSWORD = val;
+    err.textContent = '';
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('contenidoDashboard').style.display = 'block';
+    iniciar();
+  }catch(e){
+    err.textContent = 'Error de conexión. Probá de nuevo.';
+  }
+}
+document.getElementById('passwordInput').addEventListener('keypress', e => {
+  if(e.key === 'Enter') intentarLogin();
+});
+
+let iniciado = false;
+function iniciar(){
+  if (iniciado) return;
+  iniciado = true;
+  document.getElementById('diaFiltro').addEventListener('change', render);
+  cargarDashboard();
+  setInterval(cargarDashboard, REFRESCO_MS);
+  setInterval(actualizarCronometrosLocutora, 1000);
+}
+
+async function cargarDashboard(){
+  try {
+    const params = new URLSearchParams({ action: 'dashboardResultados', password: PASSWORD, _ts: Date.now() });
+    const [resDash, resLoc] = await Promise.all([
+      fetch(SCRIPT_URL + '?' + params.toString(), { cache: 'no-store' }),
+      fetch(SCRIPT_URL_LOCUTORA + '?action=ordenLocutora&_ts=' + Date.now(), { cache: 'no-store' }),
+    ]);
+    const dataDash = await resDash.json();
+    const dataLoc = await resLoc.json();
+    if (dataDash.ok) ultimaData = dataDash;
+    if (dataLoc && dataLoc.dias) ordenLocutoraData = dataLoc.dias;
+    document.getElementById('estadoTexto').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-PY', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('dot').style.background = 'var(--ok)';
+  } catch (err) {
+    document.getElementById('estadoTexto').textContent = 'Error de conexión';
+    document.getElementById('dot').style.background = 'var(--err)';
+    console.error(err);
+  }
+  render();
+}
+
+function render(){
+  const dia = document.getElementById('diaFiltro').value;
+  renderLocutora();
+  renderMedallas(dia);
+  renderAcademias(dia);
+  renderTipos(dia);
+  renderMenciones(dia);
+  renderOrdenBaile(dia);
+  renderOrdenResultados(dia);
+}
+
+/* ===================== PANEL DE LA LOCUTORA — EN VIVO ===================== */
+
+function duracionASegundos(dur){
+  const m = /^(\d+):(\d{2})$/.exec(String(dur || '').trim());
+  if (!m) return 0;
+  return Number(m[1]) * 60 + Number(m[2]);
+}
+
+function formatearMMSS(totalSeg){
+  const seg = Math.max(0, Math.round(totalSeg));
+  const m = Math.floor(seg / 60);
+  const s = seg % 60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function diasParaLocutora(){
+  const dia = document.getElementById('diaFiltro').value;
+  return dia === 'todos' ? ['Sábado', 'Domingo'] : [dia];
+}
+
+function renderLocutora(){
+  const cont = document.getElementById('locutora-en-vivo');
+  const dias = diasParaLocutora();
+  const grid = document.getElementById('locutora-en-vivo');
+  cont.innerHTML = `<div class="locutora-grid ${dias.length === 1 ? 'una-columna' : ''}">${
+    dias.map(dia => locutoraDiaHtml(dia)).join('')
+  }</div>`;
+}
+
+/**
+ * Estima a qué hora terminaría el día, sumando lo que falta de la obra
+ * actual (si hay una en escenario) más la duración + 20 seg de transición
+ * (misma convención que usa el panel admin para las horas estimadas por
+ * bloque) de cada obra que todavía no pasó. Las obras sin duración de
+ * música cargada no se pueden sumar — se avisa aparte cuántas quedan
+ * afuera del cálculo, para que se sepa que es solo aproximado.
+ */
+function calcularHoraEstimadaFin(obras, actual){
+  const TRANSICION_SEG = 20;
+  const pendientes = obras.filter(o => o.estado === 'En espera' || o.estado === undefined || !o.estado);
+  if (!actual && pendientes.length === 0) return null;
+
+  let totalSeg = 0;
+  let sinDuracion = 0;
+
+  if (actual){
+    const duracionActual = duracionASegundos(actual.duracion);
+    if (duracionActual && actual.actualizado){
+      const transcurrido = (Date.now() - new Date(actual.actualizado).getTime()) / 1000;
+      totalSeg += Math.max(0, duracionActual - transcurrido) + TRANSICION_SEG;
+    } else if (!duracionActual){
+      sinDuracion++;
+    }
+  }
+
+  pendientes.forEach(o => {
+    const seg = duracionASegundos(o.duracion);
+    if (seg) totalSeg += seg + TRANSICION_SEG;
+    else sinDuracion++;
+  });
+
+  const fin = new Date(Date.now() + totalSeg * 1000);
+  const horaTexto = fin.toLocaleTimeString('es-PY', {hour:'2-digit', minute:'2-digit'});
+  return { horaTexto, sinDuracion };
+}
+
+function locutoraDiaHtml(dia){
+  const obras = ordenLocutoraData[dia] || [];
+  if (obras.length === 0){
+    return `<div class="locutora-dia"><div class="locutora-dia-titulo">${dia}</div><div class="locutora-vacio">Todavía no hay orden cargado.</div></div>`;
+  }
+  const actual = obras.find(o => o.estado === 'En escenario') || null;
+  const yaBailaron = obras.filter(o => o.estado === 'Ya bailó' || o.estado === 'No se presenta').length;
+  const proxima = obras
+    .filter(o => o.estado === 'En espera' || o.estado === undefined || !o.estado)
+    .sort((a,b) => a.posicion - b.posicion)[0] || null;
+
+  let bloqueActual;
+  if (actual){
+    bloqueActual = `
+      <div class="locutora-actual-obra">🎭 ${escHtml(actual.obra)}</div>
+      <div class="locutora-actual-academia">${escHtml(actual.academia)} · N° ${actual.posicion}</div>
+      <div class="locutora-crono ${actual.duracion ? '' : 'sin-crono'}" data-id="${escHtml(actual.idInscripcion)}" data-actualizado="${escHtml(actual.actualizado || '')}" data-duracion="${duracionASegundos(actual.duracion)}">
+        ${actual.duracion ? '—:—' : 'Sin duración de música cargada'}
+      </div>
+    `;
+  } else {
+    bloqueActual = `<div class="locutora-vacio">— Nadie en escenario ahora —</div>`;
+  }
+
+  const estimado = calcularHoraEstimadaFin(obras, actual);
+
+  return `
+    <div class="locutora-dia">
+      <div class="locutora-dia-titulo">${dia}</div>
+      ${bloqueActual}
+      <div class="locutora-proxima">${proxima ? ('Próxima: N° ' + proxima.posicion + ' — ' + escHtml(proxima.obra)) : 'No hay próxima obra en espera.'}</div>
+      <div class="locutora-progreso">${yaBailaron} / ${obras.length} obras ya pasaron</div>
+      ${estimado ? `<div class="locutora-estimado">⏱ Fin estimado: ~${estimado.horaTexto}${estimado.sinDuracion ? ` (${estimado.sinDuracion} obra${estimado.sinDuracion > 1 ? 's' : ''} sin duración cargada, no incluida${estimado.sinDuracion > 1 ? 's' : ''} en el cálculo)` : ''}</div>` : ''}
+    </div>
+  `;
+}
+
+function actualizarCronometrosLocutora(){
+  document.querySelectorAll('.locutora-crono[data-actualizado]').forEach(el => {
+    const actualizado = el.getAttribute('data-actualizado');
+    const duracionSeg = Number(el.getAttribute('data-duracion')) || 0;
+    if (!actualizado || !duracionSeg) return;
+    const transcurrido = (Date.now() - new Date(actualizado).getTime()) / 1000;
+    const restante = duracionSeg - transcurrido;
+    el.textContent = restante > 0 ? formatearMMSS(restante) : '00:00 · terminando';
+  });
+}
+
+/* ===================== MEDALLAS / ACADEMIAS / TIPOS ===================== */
+
+function mapearPuestoAClave(puesto){
+  if (!puesto) return null;
+  const p = String(puesto).toLowerCase();
+  if (p.indexOf('1er') === 0) return 'oro';
+  if (p.indexOf('2do') === 0) return 'plata';
+  if (p.indexOf('3er') === 0) return 'bronce';
+  if (p.indexOf('desierto') === 0) return 'desierto';
+  return null;
+}
+
+function sinTildes(str){
+  return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+}
+
+function obrasFiltradas(dia){
+  const obras = ultimaData.obras || [];
+  return dia === 'todos' ? obras : obras.filter(o => o.dia === dia);
+}
+
+function renderMedallas(dia){
+  const obras = obrasFiltradas(dia);
+  const c = {oro:0,plata:0,bronce:0,desierto:0};
+  obras.forEach(o => {
+    const clave = mapearPuestoAClave(o.puesto);
+    if (clave) c[clave]++;
+  });
+  document.getElementById('grid-medallas').innerHTML = `
+    <div class="card-medalla oro"><div class="num">${c.oro}</div><div class="label">🥇 Oro</div></div>
+    <div class="card-medalla plata"><div class="num">${c.plata}</div><div class="label">🥈 Plata</div></div>
+    <div class="card-medalla bronce"><div class="num">${c.bronce}</div><div class="label">🥉 Bronce</div></div>
+    <div class="card-medalla desierto"><div class="num">${c.desierto}</div><div class="label">Desierto</div></div>
+  `;
+}
+
+function renderAcademias(dia){
+  const cont = document.getElementById('tabla-academias');
+  const obras = obrasFiltradas(dia);
+  const unificado = {};
+  obras.forEach(o => {
+    const clave = mapearPuestoAClave(o.puesto);
+    if (!clave || !o.academia) return;
+    const claveAcademia = sinTildes(o.academia);
+    if (!unificado[claveAcademia]) unificado[claveAcademia] = { nombre: o.academia, oro:0, plata:0, bronce:0, desierto:0, total:0 };
+    unificado[claveAcademia][clave]++;
+    unificado[claveAcademia].total++;
+  });
+  const ranking = Object.values(unificado).sort((a,b) => b.total - a.total || b.oro - a.oro);
+  if (ranking.length === 0){ cont.innerHTML = '<div class="empty-msg">Sin datos todavía.</div>'; return; }
+  cont.innerHTML = `
+    <table>
+      <tr><th>#</th><th>Academia</th><th class="centro">🥇</th><th class="centro">🥈</th><th class="centro">🥉</th><th class="centro">Total</th></tr>
+      ${ranking.slice(0,15).map((a,i) => `
+        <tr>
+          <td><span class="rank-num">${i+1}</span></td>
+          <td>${escHtml(a.nombre)}</td>
+          <td class="centro">${a.oro}</td><td class="centro">${a.plata}</td><td class="centro">${a.bronce}</td>
+          <td class="centro"><b>${a.total}</b></td>
+        </tr>
+      `).join('')}
+    </table>
+  `;
+}
+
+function renderTipos(dia){
+  const cont = document.getElementById('tabla-tipos');
+  const obras = obrasFiltradas(dia);
+  const conteo = {};
+  obras.forEach(o => {
+    const t = o.tipoParticipacion || 'Sin especificar';
+    if (!conteo[t]) conteo[t] = { cantidad:0, oro:0, plata:0, bronce:0, desierto:0 };
+    conteo[t].cantidad++;
+    const clave = mapearPuestoAClave(o.puesto);
+    if (clave) conteo[t][clave]++;
+  });
+  const filas = Object.entries(conteo).sort((a,b) => b[1].cantidad - a[1].cantidad);
+  if (filas.length === 0){ cont.innerHTML = '<div class="empty-msg">Sin datos todavía.</div>'; return; }
+  cont.innerHTML = `
+    <table>
+      <tr><th>Tipo de participación</th><th class="centro">Cantidad</th><th class="centro">🥇</th><th class="centro">🥈</th><th class="centro">🥉</th><th class="centro">Desierto</th></tr>
+      ${filas.map(([t,c]) => `
+        <tr>
+          <td>${escHtml(t)}</td><td class="centro">${c.cantidad}</td>
+          <td class="centro">${c.oro}</td><td class="centro">${c.plata}</td><td class="centro">${c.bronce}</td><td class="centro">${c.desierto}</td>
+        </tr>
+      `).join('')}
+    </table>
+  `;
+}
+
+function renderMenciones(dia){
+  const cont = document.getElementById('tabla-menciones');
+  let menciones = ultimaData.menciones || [];
+  if (dia !== 'todos') menciones = menciones.filter(m => m.dia === dia);
+  if (menciones.length === 0){
+    cont.innerHTML = `<div class="empty-msg">${dia === 'todos' ? 'Todavía no hay menciones especiales registradas.' : 'No hay menciones especiales registradas para ' + dia + '.'}</div>`;
+    return;
+  }
+  const porTipo = {};
+  menciones.forEach(m => {
+    if (!porTipo[m.tipo]) porTipo[m.tipo] = [];
+    porTipo[m.tipo].push(m);
+  });
+  cont.innerHTML = Object.entries(porTipo).map(([tipo, lista]) => `
+    <details class="mencion-grupo" open>
+      <summary class="mencion-grupo-titulo">${escHtml(tipo)} <span class="mencion-cant">(${lista.length})</span></summary>
+      <table>
+        <tr><th>Día</th><th>N°</th><th>Obra</th><th>Academia</th><th>Participante</th></tr>
+        ${lista.map(m => `
+          <tr>
+            <td>${escHtml(m.dia)}</td><td>${escHtml(m.nro)}</td><td>${escHtml(m.obra)}</td>
+            <td>${escHtml(m.academia)}</td><td>${escHtml(m.participante)}</td>
+          </tr>
+        `).join('')}
+      </table>
+    </details>
+  `).join('');
+}
+
+/* ===================== ORDEN DE BAILE (devoluciones + resultados) ===================== */
+
+function renderOrdenBaile(dia){
+  const cont = document.getElementById('tabla-orden');
+  if (dia === 'todos'){
+    cont.innerHTML = '<div class="empty-msg">Elegí un día específico arriba para ver el orden de baile.</div>';
+    return;
+  }
+  const obras = obrasFiltradas(dia).slice().sort((a,b) => a.nro - b.nro);
+  if (obras.length === 0){ cont.innerHTML = '<div class="empty-msg">Sin obras todavía.</div>'; return; }
+
+  const filas = obras.map(o => {
+    const jurados = o.jurados || [];
+    let estadoHtml, estadoClase;
+    if (jurados.length === 0){
+      estadoHtml = 'Pendiente'; estadoClase = 'estado-pendiente';
+    } else {
+      const conError = jurados.filter(j => !j.tieneAudio);
+      if (conError.length > 0){
+        estadoHtml = `⚠️ Falta audio: ${conError.map(j => escHtml(j.jurado)).join(', ')}`;
+        estadoClase = 'estado-error';
+      } else {
+        estadoHtml = `✓ OK (${jurados.length} jurado${jurados.length>1?'s':''})`;
+        estadoClase = 'estado-ok';
+      }
+    }
+    return `
+      <tr>
+        <td>${o.nro}</td><td>${escHtml(o.obra)}</td><td>${escHtml(o.academia)}</td>
+        <td class="${estadoClase}">${estadoHtml}</td>
+      </tr>
+    `;
+  }).join('');
+
+  cont.innerHTML = `
+    <table>
+      <tr><th>N° de obra</th><th>Obra</th><th>Academia</th><th>Estado de devolución</th></tr>
+      ${filas}
+    </table>
+  `;
+}
+
+function filasOrdenResultados(dia){
+  return obrasFiltradas(dia).slice().sort((a,b) => a.nro - b.nro).map(o => ({
+    nro: o.nro,
+    obra: o.obra,
+    academia: o.academia,
+    participantes: o.participantes,
+    cantidadParticipantes: o.cantidadParticipantes,
+    compiteCoreografia: (o.competeCoreografia || 'No').trim().toUpperCase().indexOf('S') === 0 ? 'Sí' : 'No',
+    puestoFinal: o.puesto || '—',
+    puestoCoreo: o.puestoCoreo || '',
+  }));
+}
+
+function renderOrdenResultados(dia){
+  const cont = document.getElementById('tabla-orden-resultados');
+  if (dia === 'todos'){
+    cont.innerHTML = '<div class="empty-msg">Elegí un día específico arriba para ver esta tabla.</div>';
+    return;
+  }
+  const filas = filasOrdenResultados(dia);
+  if (filas.length === 0){ cont.innerHTML = '<div class="empty-msg">Sin obras todavía.</div>'; return; }
+  cont.innerHTML = `
+    <table>
+      <tr><th>N°</th><th>Obra</th><th>Academia</th><th>Participantes</th><th class="centro">Cant.</th><th class="centro">Compite por Coreografía</th><th>Puesto Final</th><th>Puesto por Coreografía</th></tr>
+      ${filas.map(f => `
+        <tr>
+          <td>${f.nro}</td><td>${escHtml(f.obra)}</td><td>${escHtml(f.academia)}</td>
+          <td>${escHtml(f.participantes)}</td><td class="centro">${f.cantidadParticipantes}</td>
+          <td class="centro">${f.compiteCoreografia}</td><td>${escHtml(f.puestoFinal)}</td><td>${escHtml(f.puestoCoreo)}</td>
+        </tr>
+      `).join('')}
+    </table>
+  `;
+}
+
+function descargarOrdenResultados(){
+  const dia = document.getElementById('diaFiltro').value;
+  if (dia === 'todos'){
+    alert('Elegí un día específico arriba antes de descargar.');
+    return;
+  }
+  const filas = filasOrdenResultados(dia);
+  const ventana = window.open('', '_blank');
+  ventana.document.write(`
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Orden de Baile — ${dia} — Puramente Danza 2026</title>
+      <style>
+        body{font-family: Georgia, serif; padding:30px; color:#2B2432;}
+        h1{color:#4E1D7F; font-size:20px; border-bottom:2px solid #7B2FBE; padding-bottom:8px;}
+        table{width:100%; border-collapse:collapse; font-size:12px; margin-top:16px;}
+        th{background:#7B2FBE; color:#fff; padding:7px; text-align:left;}
+        td{padding:6px 7px; border-bottom:1px solid #E4DAF0;}
+        .centro{text-align:center;}
+      </style>
+    </head>
+    <body>
+      <h1>PURAMENTE DANZA 2026 — Orden de Baile · ${dia}</h1>
+      <table>
+        <tr><th>N°</th><th>Obra</th><th>Academia</th><th>Participantes</th><th class="centro">Cant.</th><th class="centro">Compite por Coreografía</th><th>Puesto Final</th><th>Puesto por Coreografía</th></tr>
+        ${filas.map(f => `
+          <tr>
+            <td>${f.nro}</td><td>${f.obra}</td><td>${f.academia}</td>
+            <td>${f.participantes}</td><td class="centro">${f.cantidadParticipantes}</td>
+            <td class="centro">${f.compiteCoreografia}</td><td>${f.puestoFinal}</td><td>${f.puestoCoreo}</td>
+          </tr>
+        `).join('')}
+      </table>
+    </body>
+    </html>
+  `);
+  ventana.document.close();
+  setTimeout(() => ventana.print(), 400);
+}
+
+function escHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  }[ch]));
+}
+</script>
+</body>
+</html>
