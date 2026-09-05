@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puramente Danza 2026 — Panel Admin de Juzgamiento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
+<style>
+  :root{
+    --p:#7B2FBE; --pd:#4E1D7F; --a:#F0C078; --a2:#C9A6EA;
+    --bg:#F4F1F8; --bg-elev:#FFFBFE; --txt:#2B2432; --muted:#7a5f74;
+    --line:#E4DAF0; --err:#C53030; --ok:#16A34A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+    font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;}
+  .app{max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+
+  header{display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:2px solid var(--p);margin-bottom:24px;}
+  header .titulo{font-size:19px;font-weight:700;color:var(--pd);}
+  header .sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+
+  .login-box{max-width:360px;margin:80px auto;background:var(--bg-elev);border:1px solid var(--line);
+    border-radius:16px;padding:32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.08);}
+  .login-box .titulo-login{font-size:20px;font-weight:700;color:var(--pd);margin-bottom:6px;}
+  .login-box .sub-login{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:18px;}
+  .login-box input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:13px;font-size:15px;margin:14px 0;text-align:center;}
+  .login-box button{width:100%;background:linear-gradient(90deg,var(--p),var(--a2));color:#fff;border:none;border-radius:10px;
+    padding:13px;font-size:14px;font-weight:700;cursor:pointer;}
+  .login-error{color:var(--err);font-size:12.5px;margin-top:10px;min-height:16px;}
+
+  .panel{background:var(--bg-elev);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:20px;}
+  .panel h2{font-size:14px;color:var(--pd);margin:0 0 14px;text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+  .fila-busqueda{display:flex;gap:8px;flex-wrap:wrap;}
+  .fila-busqueda select, .fila-busqueda input{background:var(--bg);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:11px 14px;font-size:14px;width:auto;}
+  .fila-busqueda select{flex:0 0 130px;}
+  .fila-busqueda input{flex:1;min-width:120px;}
+  .fila-busqueda button{background:var(--p);color:#fff;border:none;border-radius:10px;
+    padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;}
+
+  .jurado-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:12px;}
+  .jurado-card .nombre{font-weight:700;color:var(--pd);margin-bottom:10px;}
+  .campos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .campos label, .panel > label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;}
+  .panel input, .panel select, .panel textarea{width:100%;background:var(--bg);border:1px solid var(--line);
+    color:var(--txt);border-radius:8px;padding:9px 10px;font-size:13.5px;}
+  .panel textarea{resize:vertical;min-height:38px;margin-bottom:10px;}
+  .jurado-card label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;}
+  .jurado-card input, .jurado-card textarea{width:100%;background:var(--bg-elev);border:1px solid var(--line);
+    color:var(--txt);border-radius:8px;padding:9px 10px;font-size:13.5px;margin-bottom:8px;}
+  .jurado-card .acciones{display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px;}
+  .jurado-card .audio-link{font-size:12px;}
+  .btn-guardar{background:var(--pd);color:#fff;border:none;border-radius:8px;
+    padding:8px 16px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .msg-ok{color:var(--ok);font-size:12px;margin-left:8px;}
+  .msg-err{color:var(--err);font-size:12px;margin-left:8px;}
+  .estado-visible{color:var(--ok);}
+  .estado-oculto{color:var(--err);}
+
+  .btn-secundario{background:none;border:1.5px solid var(--p);color:var(--pd);
+    border-radius:10px;padding:12px 20px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .empty-msg{color:var(--muted);font-size:13px;text-align:center;padding:20px;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="login-box" id="loginBox">
+    <div class="titulo-login">Puramente Danza 2026</div>
+    <div class="sub-login">Panel Admin de Juzgamiento</div>
+    <input type="password" id="passwordInput" placeholder="Contraseña de admin">
+    <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); justify-content:center; margin:-6px 0 10px; text-transform:none; letter-spacing:0;">
+      <input type="checkbox" id="mostrarPassword" onchange="document.getElementById('passwordInput').type = this.checked ? 'text' : 'password';" style="width:auto;">
+      Mostrar contraseña
+    </label>
+    <button onclick="intentarLogin()">Ingresar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+
+  <div id="contenidoAdmin" style="display:none;">
+    <header>
+      <div>
+        <div class="titulo">Panel Admin de Juzgamiento</div>
+        <div class="sub">Puramente Danza 2026 · Solo uso interno</div>
+      </div>
+    </header>
+
+    <div class="panel">
+      <h2>🔍 Buscar y corregir una obra</h2>
+      <div class="fila-busqueda">
+        <select id="diaBusqueda">
+          <option value="Sábado">Sábado</option>
+          <option value="Domingo">Domingo</option>
+        </select>
+        <input type="tel" id="nroBusqueda" placeholder="N° de obra">
+        <button onclick="buscarObraAdmin()">Buscar</button>
+      </div>
+      <div id="resultadoBusqueda"></div>
+    </div>
+
+    <div class="panel">
+      <h2>📄 PDFs de devolución</h2>
+      <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+        Genera (o actualiza) el PDF de devolución de todas las obras que ya tienen al menos una calificación,
+        de una sola vez. Se guarda en la carpeta "PURAMENTE DANZA 2026 - Devoluciones PDF" de tu Drive.
+      </p>
+      <button class="btn-secundario" onclick="generarPdfs()">Generar/actualizar todos los PDFs</button>
+      <button class="btn-secundario" onclick="generarPdfsFaltantes()" style="margin-left:8px;">Generar solo los que faltan</button>
+      <span id="pdfMsg"></span>
+
+      <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--line);">
+        <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+          Estos PDFs quedan listos acá, pero todavía no hay una página pública donde la academia los vea —
+          este interruptor deja preparado el estado de "habilitado por día" para cuando armemos ese Portal
+          de Devoluciones. Por ahora podés dejarlo activado sin que afecte nada.
+        </p>
+        <div class="fila-busqueda" style="margin-bottom:10px;">
+          <select id="pdf_dia">
+            <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+        </div>
+        <button class="btn-secundario" onclick="togglePdfs(true)">✓ Habilitar PDFs de ese día</button>
+        <button class="btn-secundario" onclick="togglePdfs(false)" style="margin-left:8px;">Deshabilitar</button>
+        <div id="toggleMsg" style="margin-top:8px; font-size:12.5px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>🎧 Audios de devolución</h2>
+      <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+        <strong>Apagado de emergencia general</strong> — mismo comentario que arriba: queda preparado para
+        cuando exista una página pública de devoluciones. Usalo solo si hace falta apagar todo de golpe.
+      </p>
+      <button class="btn-secundario" onclick="toggleAudioGlobal(true)">✓ Habilitar todos los audios</button>
+      <button class="btn-secundario" onclick="toggleAudioGlobal(false)" style="margin-left:8px;">Apagar todo (emergencia)</button>
+      <div id="toggleAudioGlobalMsg" style="margin-top:8px; font-size:12.5px;"></div>
+
+      <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--line);">
+        <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+          <strong>Control por obra</strong> — todas las obras que ya tienen calificación se cargan acá, listas
+          para cuando esa página exista. Quedan <strong>ocultas por defecto</strong>.
+        </p>
+        <div class="fila-busqueda" style="margin-bottom:12px;">
+          <select id="audioLista_dia">
+            <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+          <button onclick="cargarListaAudios()">Cargar lista</button>
+        </div>
+        <div id="listaAudiosPorDia"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>🏆 Registrar ganador de premio especial</h2>
+      <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+        Trae el ranking de postulaciones (armado con lo que marcó cada jurado al calificar) y elegí con un
+        clic quién se lleva cada premio — queda guardado en la pestaña "Ganadores Menciones" de la planilla
+        del jurado, con fecha y hora. Si un caso no está en la lista (empate, corrección puntual), usá
+        "Otros" para cargarlo a mano.
+      </p>
+      <div class="fila-busqueda" style="margin-bottom:12px;">
+        <select id="mencion_dia">
+          <option value="Sábado">Sábado</option>
+          <option value="Domingo">Domingo</option>
+        </select>
+        <button onclick="cargarRankingMenciones()">Cargar ranking de premios</button>
+      </div>
+      <div id="rankingCont">
+        <div style="font-size:12.5px; color:var(--muted);">Elegí un día y tocá "Cargar ranking de premios".</div>
+      </div>
+
+      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
+        <button class="btn-secundario" onclick="toggleMencionManualLibre()">✏️ No está en la lista — cargar a mano</button>
+        <div id="mencionManualLibreCont" class="campos" style="display:none; margin-top:12px;">
+          <div><label>Tipo de premio</label><input type="text" id="mml_tipo" placeholder="Ej: Mejor Bailarín/a Jazz"></div>
+          <div><label>N° de obra ganadora</label><input type="text" id="mml_nro"></div>
+          <div><label>Nombre de la obra</label><input type="text" id="mml_obra"></div>
+          <div><label>Academia</label><input type="text" id="mml_academia"></div>
+          <div><label>Participante (opcional)</label><input type="text" id="mml_participante"></div>
+        </div>
+        <div id="mencionManualLibreBtnWrap" style="display:none; margin-top:10px;">
+          <button class="btn-guardar" onclick="registrarGanadorManualLibre()">Registrar ganador</button>
+          <span id="mencionManualLibreMsg"></span>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
+        <div class="fila-busqueda" style="margin-bottom:10px;">
+          <select id="ganadores_dia">
+            <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+        </div>
+        <button class="btn-secundario" onclick="verGanadores()">Ver ganadores ya registrados</button>
+        <button class="btn-secundario" onclick="imprimirGanadores()" style="margin-left:8px;">🖨 Imprimir lista</button>
+        <div id="listaGanadores" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>➕ Agregar obra fuera de orden</h2>
+      <p style="font-size:12.5px; color:var(--muted); margin-top:0;">
+        Para un número que no estaba en la planilla original de inscripciones. Completá los datos y el
+        puntaje de un jurado — se agrega al Portal de Jurado (el resto de los jurados también la pueden
+        calificar como a cualquier otra) y al Consolidado Evaluación. No toca ni modifica la planilla de
+        Inscripciones 2026 en ningún momento.
+      </p>
+      <div class="campos">
+        <div>
+          <label>Día</label>
+          <select id="nueva_dia" onchange="actualizarJuradosNuevaObra()">
+            <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+        </div>
+        <div>
+          <label>N° de obra</label>
+          <input type="text" id="nueva_nro" placeholder="Ej: 92 (si ya existe, usá un decimal: 92.5)">
+        </div>
+      </div>
+      <div class="campos">
+        <div>
+          <label>Academia</label>
+          <input type="text" id="nueva_academia">
+        </div>
+        <div>
+          <label>Nombre de la obra</label>
+          <input type="text" id="nueva_obra">
+        </div>
+      </div>
+      <div class="campos">
+        <div>
+          <label>Modalidad</label>
+          <input type="text" id="nueva_modalidad" placeholder="Escribila igual que en tus categorías (ej: Jazz)">
+        </div>
+        <div>
+          <label>Categoría</label>
+          <input type="text" id="nueva_categoria" placeholder="Ej: Infantil">
+        </div>
+      </div>
+      <label>Participantes (separados por coma)</label>
+      <textarea id="nueva_participantes" placeholder="Ej: Ana Gómez, Lucía Torres"></textarea>
+      <div class="campos" style="margin-top:10px;">
+        <div>
+          <label>Tipo de participación</label>
+          <input type="text" id="nueva_tipo" placeholder="Ej: Solista, Dúo, Grupo...">
+        </div>
+        <div>
+          <label>¿Compite por coreografía?</label>
+          <select id="nueva_compite">
+            <option value="No">No</option>
+            <option value="Sí">Sí</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--line);">
+        <div class="campos">
+          <div>
+            <label>Jurado</label>
+            <select id="nueva_jurado"></select>
+          </div>
+          <div>
+            <label>Puntaje (5-10)</label>
+            <input type="number" min="5" max="10" id="nueva_score">
+          </div>
+        </div>
+        <div class="campos">
+          <div>
+            <label>Puntaje Coreografía (opcional)</label>
+            <input type="number" min="5" max="10" id="nueva_scoreCoreo">
+          </div>
+          <div>
+            <label>Audio (opcional)</label>
+            <input type="file" accept="audio/*" id="nueva_audio">
+          </div>
+        </div>
+        <label>Premio postulado (opcional)</label>
+        <input type="text" id="nueva_premio" placeholder="Ej: Mejor Bailarín/a Jazz (solo si el puntaje es 9 o 10)">
+      </div>
+
+      <button class="btn-guardar" style="margin-top:14px;" onclick="crearObraNueva()">Guardar obra nueva</button>
+      <span id="nuevaObraMsg"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// Red de seguridad: si pasa cualquier error de JavaScript no previsto en
+// algún botón, avisamos en vez de que "no pase nada" en silencio.
+window.addEventListener('error', (ev) => {
+  console.error('Error en la página:', ev.error || ev.message);
+});
+window.addEventListener('unhandledrejection', (ev) => {
+  console.error('Error no capturado:', ev.reason);
+});
+
+/* ⚠️ Mismo backend (Code_Jurado.gs) que usa jurado.html — es el que
+   también atiende a este panel admin. Si volvés a "Implementar > Nueva
+   versión" ese proyecto, el link no cambia y no hace falta tocar esto. */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyks-M48ngn0Vhrhmyx_GgcNU5EAdId9ZTLUbHvAO2LXuZmCW_p0n8pRapccx_aKfq6Iw/exec';
+let PASSWORD = null; // solo en memoria de esta sesión, nunca guardado en el dispositivo
+
+// Si agregás o sacás un jurado, actualizalo ACÁ y también en Code_Jurado.gs
+// (constante JURADOS_POR_DIA) — tienen que quedar siempre iguales.
+const JURADOS_POR_DIA = {
+  'Sábado': ['Maia Ayala', 'Renan Banov', 'Rossana Orue', 'Patricia Mareco'],
+  'Domingo': ['Rossana Orue', 'Diana Paniagua', 'Claudia Ramos', 'Liz Mora'],
+};
+
+function escHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  }[ch]));
+}
+
+function actualizarJuradosNuevaObra(){
+  const dia = document.getElementById('nueva_dia').value;
+  const sel = document.getElementById('nueva_jurado');
+  sel.innerHTML = (JURADOS_POR_DIA[dia] || []).map(j => `<option>${escHtml(j)}</option>`).join('');
+}
+
+async function intentarLogin(){
+  const val = document.getElementById('passwordInput').value.trim();
+  const err = document.getElementById('loginError');
+  if(!val) return;
+  err.textContent = 'Verificando…';
+  try{
+    const params = new URLSearchParams({ action: 'adminListarGanadores', password: val });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok && json.error === 'Contraseña incorrecta'){
+      err.textContent = 'Contraseña incorrecta.';
+      return;
+    }
+    PASSWORD = val;
+    err.textContent = '';
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('contenidoAdmin').style.display = 'block';
+    actualizarJuradosNuevaObra();
+  }catch(e){
+    err.textContent = 'Error de conexión. Probá de nuevo.';
+  }
+}
+document.getElementById('passwordInput').addEventListener('keypress', e => {
+  if(e.key === 'Enter') intentarLogin();
+});
+
+function archivoABase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---- Conversión a MP3 real (audios que llegan de afuera, ej. WhatsApp) ----
+   El backend siempre guarda estos audios con extensión ".mp3", pero un
+   archivo de WhatsApp casi nunca es un MP3 de verdad — normalmente es
+   .opus/.ogg (Android) o .m4a (iPhone). Si lo subimos tal cual, el archivo
+   en Drive queda con el CONTENIDO real en ese formato pero el NOMBRE
+   diciendo ".mp3": la mayoría de los reproductores (celular, navegador,
+   VLC) igual lo abren porque detectan el formato real adentro, pero un
+   reproductor más estricto (por ejemplo el de Windows) lo rechaza con
+   error, aunque el archivo esté perfecto. Por eso, si el archivo elegido
+   no es ya un MP3 real, lo convertimos ACÁ antes de subirlo — mismo
+   método que ya usa jurado.html para el audio que graba cada jurado. */
+function archivoEsMp3(file){
+  const tipo = (file.type || '').toLowerCase();
+  const nombre = (file.name || '').toLowerCase();
+  return tipo.indexOf('mpeg') !== -1 || tipo.indexOf('mp3') !== -1 || nombre.endsWith('.mp3');
+}
+
+function convertirArchivoAMp3(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try{
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioCtx.decodeAudioData(reader.result);
+        const samples = audioBuffer.getChannelData(0);
+        const sampleRate = audioBuffer.sampleRate;
+        const int16Samples = new Int16Array(samples.length);
+        for(let i = 0; i < samples.length; i++){
+          const s = Math.max(-1, Math.min(1, samples[i]));
+          int16Samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        const mp3Encoder = new lamejs.Mp3Encoder(1, sampleRate, 96);
+        const blockSize = 1152;
+        const mp3Data = [];
+        for(let i = 0; i < int16Samples.length; i += blockSize){
+          const chunk = int16Samples.subarray(i, i + blockSize);
+          const mp3buf = mp3Encoder.encodeBuffer(chunk);
+          if(mp3buf.length > 0) mp3Data.push(mp3buf);
+        }
+        const mp3buf = mp3Encoder.flush();
+        if(mp3buf.length > 0) mp3Data.push(mp3buf);
+        resolve(new Blob(mp3Data, {type:'audio/mpeg'}));
+      }catch(err){ reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Punto único: recibe el archivo elegido en el <input> y devuelve el
+// base64 LISTO para mandar al backend, ya convertido a MP3 real si hacía
+// falta (si ya era un .mp3 de verdad, lo manda tal cual, sin volver a
+// codificarlo para no perder calidad de más). `onEstado` es opcional, para
+// avisar en pantalla mientras se convierte (puede tardar unos segundos).
+async function prepararAudioParaSubir(file, onEstado){
+  if(archivoEsMp3(file)){
+    return archivoABase64(file);
+  }
+  if(onEstado) onEstado('Convirtiendo el audio a MP3…');
+  let mp3Blob;
+  try{
+    mp3Blob = await convertirArchivoAMp3(file);
+  }catch(err){
+    throw new Error('No se pudo convertir este audio a MP3 (formato no reconocido por el navegador). Probá con otro archivo o convertilo antes con otra herramienta.');
+  }
+  return archivoABase64(mp3Blob);
+}
+
+/* ---- Buscar y corregir una obra ---- */
+
+async function buscarObraAdmin(){
+  const dia = document.getElementById('diaBusqueda').value;
+  const nro = document.getElementById('nroBusqueda').value.trim();
+  if(!nro) return;
+  const cont = document.getElementById('resultadoBusqueda');
+  cont.innerHTML = '<div class="empty-msg">Buscando…</div>';
+  try{
+    const params = new URLSearchParams({ action: 'adminBuscar', password: PASSWORD, dia, nro });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok){ cont.innerHTML = '<div class="empty-msg">' + escHtml(json.error || 'Error') + '</div>'; return; }
+    renderResultado(dia, nro, json.info, json.resultados || []);
+  }catch(err){
+    cont.innerHTML = '<div class="empty-msg">Error de conexión. Probá de nuevo.</div>';
+  }
+}
+
+function renderResultado(dia, nro, info, resultados){
+  const cont = document.getElementById('resultadoBusqueda');
+  if(!info){
+    cont.innerHTML = '<div class="empty-msg">No hay ninguna obra con el N° ' + escHtml(nro) + ' en ' + dia + '.</div>';
+    return;
+  }
+  const header = `
+    <div style="margin-top:14px; font-size:13px; color:var(--muted);">
+      <strong style="color:var(--txt);">${escHtml(info.obra || '')}</strong> — ${escHtml(info.academia || '')}
+      <div style="font-size:11.5px; margin-top:2px;">
+        ${escHtml(info.modalidad || '')} · ${escHtml(info.categoria || '')} · ${escHtml(info.tipoParticipacion || '')}
+        ${info.participantes && info.participantes.length ? ' · ' + escHtml(info.participantes.join(', ')) : ''}
+      </div>
+    </div>`;
+  if(!resultados.length){
+    cont.innerHTML = header + '<div class="empty-msg">Ningún jurado calificó esta obra todavía.</div>';
+    return;
+  }
+  cont.innerHTML = header + resultados.map((r,i) => `
+    <div class="jurado-card">
+      <div class="nombre">${escHtml(r.jurado)}</div>
+      <div class="campos">
+        <div>
+          <label>Puntaje (5-10)</label>
+          <input type="number" min="5" max="10" id="score_${i}" value="${r.score}">
+        </div>
+        <div>
+          <label>Puntaje Coreografía</label>
+          <input type="number" min="5" max="10" id="scoreCoreo_${i}" value="${r.scoreCoreo || ''}">
+        </div>
+      </div>
+      <label>Premio postulado</label>
+      <input type="text" id="premio_${i}" value="${escHtml(r.premio || '')}" placeholder="Dejalo vacío si no postula a nada">
+      <div class="acciones">
+        <span class="audio-link" id="audioLink_${i}">${r.audioUrl ? `<a href="${r.audioUrl}" target="_blank">▶ Escuchar audio</a>` : '⚠️ Sin audio guardado'}</span>
+        <span>
+          <button class="btn-guardar" onclick="guardarCorreccion(${escHtml(JSON.stringify(dia))},${escHtml(JSON.stringify(nro))},${escHtml(JSON.stringify(r.jurado))}, ${i})">Guardar corrección</button>
+          <span id="msg_${i}"></span>
+        </span>
+      </div>
+      <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);">
+        <label>Subir audio manualmente (ej: llegó por WhatsApp)</label>
+        <input type="file" accept="audio/*" id="archivoAudio_${i}">
+        <button class="btn-guardar" id="btnSubirAudio_${i}" style="margin-top:6px;" onclick="subirAudioManual(${escHtml(JSON.stringify(dia))},${escHtml(JSON.stringify(nro))},${escHtml(JSON.stringify(r.jurado))}, ${i})">Subir audio</button>
+        <span id="msgAudio_${i}" style="font-weight:700;"></span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function guardarCorreccion(dia, nro, jurado, i){
+  const score = document.getElementById('score_' + i).value;
+  const scoreCoreo = document.getElementById('scoreCoreo_' + i).value;
+  const premio = document.getElementById('premio_' + i).value;
+  const msg = document.getElementById('msg_' + i);
+  msg.textContent = ' Guardando…'; msg.className = '';
+  try{
+    const fd = new FormData();
+    fd.append('action', 'adminGuardar'); fd.append('password', PASSWORD);
+    fd.append('dia', dia); fd.append('nro', nro); fd.append('jurado', jurado);
+    fd.append('score', score); fd.append('scoreCoreo', scoreCoreo); fd.append('premio', premio);
+    const r = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || 'No se pudo guardar.');
+    msg.textContent = ' ✓ Guardado'; msg.className = 'msg-ok';
+  }catch(err){
+    msg.textContent = ' ' + err.message; msg.className = 'msg-err';
+  }
+}
+
+async function subirAudioManual(dia, nro, jurado, i){
+  const input = document.getElementById('archivoAudio_' + i);
+  const msg = document.getElementById('msgAudio_' + i);
+  const btn = document.getElementById('btnSubirAudio_' + i);
+  const file = input && input.files[0];
+  if(!file){
+    msg.textContent = '⚠️ Elegí un archivo primero'; msg.className = 'msg-err';
+    alert('Elegí un archivo de audio antes de tocar "Subir audio".');
+    return;
+  }
+  // Los audios de WhatsApp suelen pesar poco (unos pocos MB); si el
+  // archivo es muy grande avisamos, porque puede tardar bastante en subir
+  // (no lo bloqueamos, por si igual hace falta subirlo).
+  const pesoMB = (file.size / (1024*1024)).toFixed(1);
+  if(file.size > 20*1024*1024){
+    msg.textContent = `Subiendo… (archivo de ${pesoMB} MB, puede tardar varios minutos)`;
+  } else {
+    msg.textContent = 'Subiendo…';
+  }
+  msg.className = '';
+  if(btn) btn.disabled = true;
+  console.log(`[subirAudioManual] jurado=${jurado} dia=${dia} nro=${nro} archivo="${file.name}" tipo="${file.type}" (${pesoMB} MB)`);
+  try{
+    const audioBase64 = await prepararAudioParaSubir(file, (texto) => { msg.textContent = texto; });
+    msg.textContent = 'Subiendo…';
+    const fd = new FormData();
+    fd.append('action', 'adminSubirAudio'); fd.append('password', PASSWORD);
+    fd.append('dia', dia); fd.append('nro', nro); fd.append('jurado', jurado);
+    fd.append('audioBase64', audioBase64);
+    const r = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+    const textoCrudo = await r.text();
+    let j;
+    try{
+      j = JSON.parse(textoCrudo);
+    }catch(errParse){
+      console.error('[subirAudioManual] Respuesta no era JSON:', textoCrudo.slice(0, 500));
+      throw new Error('El servidor devolvió algo inesperado (revisá que hayas implementado la última versión del backend). Detalle: ' + textoCrudo.slice(0, 150));
+    }
+    if(!j.ok) throw new Error(j.error || 'No se pudo subir el audio.');
+
+    // Actualizamos el link "Escuchar audio" en el momento, sin que haga
+    // falta volver a buscar la obra.
+    const link = document.getElementById('audioLink_' + i);
+    if(link && j.audioUrl){
+      link.innerHTML = `<a href="${escHtml(j.audioUrl)}" target="_blank">▶ Escuchar audio</a>`;
+    }
+    msg.textContent = '✓ Audio subido correctamente'; msg.className = 'msg-ok';
+    alert(`✓ Audio subido correctamente para ${jurado}.`);
+    input.value = '';
+  }catch(err){
+    console.error('[subirAudioManual] Error:', err);
+    msg.textContent = '❌ ' + err.message; msg.className = 'msg-err';
+    alert('❌ No se pudo subir el audio:\n' + err.message);
+  }finally{
+    if(btn) btn.disabled = false;
+  }
+}
+
+/* ---- PDFs de devolución ---- */
+
+async function generarPdfs(){
+  const msg = document.getElementById('pdfMsg');
+  msg.textContent = ' Generando (puede tardar varios minutos con muchas obras)…';
+  try{
+    const params = new URLSearchParams({ action: 'adminGenerarPdfs', password: PASSWORD });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    msg.textContent = ' ✓ Se generaron/actualizaron ' + json.generados + ' PDFs.';
+  }catch(err){ msg.textContent = ' ❌ ' + err.message; }
+}
+
+async function generarPdfsFaltantes(){
+  const msg = document.getElementById('pdfMsg');
+  msg.textContent = ' Generando los que faltan…';
+  try{
+    const params = new URLSearchParams({ action: 'adminGenerarPdfsFaltantes', password: PASSWORD });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    msg.textContent = ' ✓ Nuevos: ' + json.generados + ' — Ya existían: ' + json.saltados +
+      (json.terminado ? ' — ✅ TERMINADO, recorrió toda la lista.' : ' (se cortó por tiempo, tocá el botón de nuevo para seguir)');
+  }catch(err){ msg.textContent = ' ❌ ' + err.message; }
+}
+
+async function togglePdfs(habilitar){
+  const msg = document.getElementById('toggleMsg');
+  const dia = document.getElementById('pdf_dia').value;
+  msg.textContent = 'Aplicando…';
+  try{
+    const params = new URLSearchParams({ action: 'adminTogglePdfs', password: PASSWORD, dia, habilitar: String(habilitar) });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    msg.textContent = json.pdfsHabilitados
+      ? ('✓ PDFs de ' + dia + ' habilitados.')
+      : ('PDFs de ' + dia + ' deshabilitados de nuevo.');
+  }catch(err){ msg.textContent = '❌ ' + err.message; }
+}
+
+/* ---- Audios de devolución ---- */
+
+async function toggleAudioGlobal(habilitar){
+  const msg = document.getElementById('toggleAudioGlobalMsg');
+  msg.textContent = 'Aplicando…';
+  try{
+    const params = new URLSearchParams({ action: 'adminToggleAudio', password: PASSWORD, habilitar: String(habilitar) });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    msg.textContent = json.audioHabilitado
+      ? '✓ Audios habilitados de nuevo.'
+      : '⚠️ TODOS los audios apagados — hasta que los vuelvas a habilitar.';
+  }catch(err){ msg.textContent = '❌ ' + err.message; }
+}
+
+async function cargarListaAudios(){
+  const dia = document.getElementById('audioLista_dia').value;
+  const cont = document.getElementById('listaAudiosPorDia');
+  cont.innerHTML = '<div style="font-size:12.5px; color:var(--muted);">Cargando…</div>';
+  try{
+    const params = new URLSearchParams({ action: 'adminListarAudiosPorDia', password: PASSWORD, dia });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    if(json.obras.length === 0){
+      cont.innerHTML = '<div style="font-size:12.5px; color:var(--muted);">Todavía no hay obras calificadas ese día.</div>';
+      return;
+    }
+    cont.innerHTML = json.obras.map(o => `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;">
+        <span style="flex:1;">N° ${o.nro} — ${escHtml(o.obra)} <span style="color:var(--muted); font-size:11px;">(${escHtml(o.academia)})</span></span>
+        <span class="${o.visible ? 'estado-visible' : 'estado-oculto'}" id="estado_${dia}_${o.nro}" style="font-size:11px; font-weight:700; white-space:nowrap;">
+          ${o.visible ? '🔊 Visible' : '🔒 Oculto'}
+        </span>
+        <button class="btn-guardar" onclick="toggleAudioObra('${dia}','${o.nro}', true)">Visible</button>
+        <button class="btn-guardar" style="background:var(--err);" onclick="toggleAudioObra('${dia}','${o.nro}', false)">Ocultar</button>
+      </div>
+    `).join('');
+  }catch(err){
+    cont.innerHTML = '<div style="font-size:12.5px; color:var(--err);">' + err.message + '</div>';
+  }
+}
+
+async function toggleAudioObra(dia, nro, visible){
+  const estado = document.getElementById('estado_' + dia + '_' + nro);
+  if(estado) estado.textContent = 'Aplicando…';
+  try{
+    const params = new URLSearchParams({ action: 'adminToggleAudioObra', password: PASSWORD, dia, nro, visible: String(visible) });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    if(estado){
+      estado.textContent = visible ? '🔊 Visible' : '🔒 Oculto';
+      estado.className = visible ? 'estado-visible' : 'estado-oculto';
+    }
+  }catch(err){
+    if(estado) estado.textContent = 'Error';
+    alert('❌ ' + err.message);
+  }
+}
+
+/* ---- Premio especial: ranking y ganadores ---- */
+
+let rankingData = [];
+
+async function cargarRankingMenciones(){
+  const cont = document.getElementById('rankingCont');
+  const dia = document.getElementById('mencion_dia').value;
+  cont.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">Cargando ranking…</div>';
+  try{
+    const params = new URLSearchParams({ action: 'adminRankingMenciones', password: PASSWORD, dia });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    rankingData = json.ranking || [];
+    if(!rankingData.length){
+      cont.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">Nadie fue postulado a un premio especial ese día todavía.</div>';
+      return;
+    }
+    cont.innerHTML = rankingData.map((grupo, idx) => `
+      <div style="border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+        <div style="font-weight:700; font-size:13px; margin-bottom:8px;">
+          🏆 ${escHtml(grupo.tipo)} <span style="color:var(--muted); font-weight:400;">(${grupo.items.length} postulada${grupo.items.length > 1 ? 's' : ''})</span>
+        </div>
+        <div class="fila-busqueda">
+          <select id="mencionSelect_${idx}" style="flex:1;" onchange="onCambioMencionSelect(${idx})">
+            ${grupo.items.map((m,i) => `<option value="${i}">N° ${m.nro} — ${escHtml(m.obra)} (${escHtml(m.academia)}${m.participantes && m.participantes.length ? ' · ' + escHtml(m.participantes.join(', ')) : ''}) — ${m.puntajeMax} pts, ${m.jurados.length} jurado${m.jurados.length > 1 ? 's' : ''}</option>`).join('')}
+            <option value="otros">Otros / carga manual…</option>
+          </select>
+          <button onclick="registrarGanadorDesdeGrupo(${idx})">Registrar</button>
+        </div>
+        <div id="mencionManual_${idx}" class="campos" style="display:none; margin-top:10px;">
+          <div><label>N° de obra ganadora</label><input type="text" id="mencionManualNro_${idx}"></div>
+          <div><label>Nombre de la obra</label><input type="text" id="mencionManualObra_${idx}"></div>
+          <div><label>Academia</label><input type="text" id="mencionManualAcademia_${idx}"></div>
+          <div><label>Participante (opcional)</label><input type="text" id="mencionManualParticipante_${idx}"></div>
+        </div>
+        <span id="mencionMsg_${idx}"></span>
+      </div>
+    `).join('');
+  }catch(err){
+    cont.innerHTML = '<div style="font-size:12.5px;color:var(--err);">' + err.message + '</div>';
+  }
+}
+
+function onCambioMencionSelect(idx){
+  const sel = document.getElementById('mencionSelect_' + idx);
+  document.getElementById('mencionManual_' + idx).style.display = (sel.value === 'otros') ? 'grid' : 'none';
+}
+
+async function registrarGanadorDesdeGrupo(idx){
+  const grupo = rankingData[idx];
+  const sel = document.getElementById('mencionSelect_' + idx);
+  const msg = document.getElementById('mencionMsg_' + idx);
+  const dia = document.getElementById('mencion_dia').value;
+
+  let nro, obra, academia, participante, idInscripcion = '';
+  if(sel.value === 'otros'){
+    nro = document.getElementById('mencionManualNro_' + idx).value.trim();
+    obra = document.getElementById('mencionManualObra_' + idx).value.trim();
+    academia = document.getElementById('mencionManualAcademia_' + idx).value.trim();
+    participante = document.getElementById('mencionManualParticipante_' + idx).value.trim();
+    if(!nro || !obra){
+      msg.textContent = ' Completá al menos N° y Nombre de la obra.';
+      msg.className = 'msg-err';
+      return;
+    }
+  }else{
+    const m = grupo.items[parseInt(sel.value, 10)];
+    nro = m.nro; obra = m.obra || ''; academia = m.academia || ''; idInscripcion = m.idInscripcion || '';
+    participante = (m.participantes || []).join(', ');
+  }
+
+  msg.textContent = ' Guardando…'; msg.className = '';
+  try{
+    const params = new URLSearchParams({
+      action: 'adminRegistrarGanador', password: PASSWORD,
+      dia, tipo: grupo.tipo, nro, obra, academia, participante, idInscripcion,
+    });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    msg.textContent = ' ✓ Registrado.'; msg.className = 'msg-ok';
+  }catch(err){
+    msg.textContent = ' ' + err.message; msg.className = 'msg-err';
+  }
+}
+
+function toggleMencionManualLibre(){
+  const cont = document.getElementById('mencionManualLibreCont');
+  const btnWrap = document.getElementById('mencionManualLibreBtnWrap');
+  const visible = cont.style.display === 'grid';
+  cont.style.display = visible ? 'none' : 'grid';
+  btnWrap.style.display = visible ? 'none' : 'block';
+}
+
+async function registrarGanadorManualLibre(){
+  const msg = document.getElementById('mencionManualLibreMsg');
+  const dia = document.getElementById('mencion_dia').value;
+  const tipo = document.getElementById('mml_tipo').value.trim();
+  const nro = document.getElementById('mml_nro').value.trim();
+  const obra = document.getElementById('mml_obra').value.trim();
+  const academia = document.getElementById('mml_academia').value.trim();
+  const participante = document.getElementById('mml_participante').value.trim();
+
+  if(!tipo || !nro || !obra){
+    msg.textContent = ' Completá al menos Tipo de premio, N° y Nombre de la obra.';
+    msg.className = 'msg-err';
+    return;
+  }
+
+  msg.textContent = ' Guardando…'; msg.className = '';
+  try{
+    const params = new URLSearchParams({ action: 'adminRegistrarGanador', password: PASSWORD, dia, tipo, nro, obra, academia, participante });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    msg.textContent = ' ✓ Registrado.'; msg.className = 'msg-ok';
+    ['mml_tipo','mml_nro','mml_obra','mml_academia','mml_participante'].forEach(id => { document.getElementById(id).value = ''; });
+  }catch(err){
+    msg.textContent = ' ' + err.message; msg.className = 'msg-err';
+  }
+}
+
+async function verGanadores(){
+  const dia = document.getElementById('ganadores_dia').value;
+  const cont = document.getElementById('listaGanadores');
+  cont.innerHTML = '<div style="font-size:12.5px; color:var(--muted);">Cargando…</div>';
+  try{
+    const params = new URLSearchParams({ action: 'adminListarGanadores', password: PASSWORD });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error);
+    const ganadores = json.ganadores.filter(g => g.dia === dia);
+    if(ganadores.length === 0){
+      cont.innerHTML = '<div style="font-size:12.5px; color:var(--muted);">Todavía no registraste ningún ganador para ese día.</div>';
+      return;
+    }
+    cont.innerHTML = ganadores.map(g => `
+      <div style="padding:8px 0; border-bottom:1px solid var(--line); font-size:13px;">
+        <strong>${escHtml(g.tipo)}</strong> — N° ${g.nro} ${escHtml(g.obra || '')} <span style="color:var(--muted); font-size:11px;">(${escHtml(g.academia || '')}${g.participante ? ' · ' + escHtml(g.participante) : ''})</span>
+      </div>
+    `).join('');
+  }catch(err){
+    cont.innerHTML = '<div style="font-size:12.5px; color:var(--err);">' + err.message + '</div>';
+  }
+}
+
+async function imprimirGanadores(){
+  const dia = document.getElementById('ganadores_dia').value;
+  try{
+    const params = new URLSearchParams({ action: 'adminListarGanadores', password: PASSWORD });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
+    const json = await res.json();
+    if(!json.ok){ alert('No se pudo generar la lista: ' + json.error); return; }
+    const ganadores = (json.ganadores || []).filter(g => g.dia === dia);
+    if(ganadores.length === 0){ alert('Todavía no hay ganadores registrados para ese día.'); return; }
+
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Ganadores de Premio Especial — ${dia} — Puramente Danza 2026</title>
+        <style>
+          body{font-family: Georgia, serif; padding:30px; color:#2B2432;}
+          h1{color:#4E1D7F; font-size:20px; border-bottom:2px solid #7B2FBE; padding-bottom:8px;}
+          table{width:100%; border-collapse:collapse; font-size:12px; margin-top:16px;}
+          th{background:#7B2FBE; color:#fff; padding:7px; text-align:left;}
+          td{padding:6px 7px; border-bottom:1px solid #E4DAF0;}
+        </style>
+      </head>
+      <body>
+        <h1>PURAMENTE DANZA 2026 — Ganadores de Premio Especial · ${dia}</h1>
+        <table>
+          <tr><th>Premio</th><th>N°</th><th>Obra</th><th>Academia</th><th>Participante</th></tr>
+          ${ganadores.map(g => `
+            <tr>
+              <td>${escHtml(g.tipo)}</td><td>${g.nro}</td><td>${escHtml(g.obra || '')}</td>
+              <td>${escHtml(g.academia || '')}</td><td>${escHtml(g.participante || '')}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </body>
+      </html>
+    `);
+    ventana.document.close();
+    setTimeout(() => ventana.print(), 400);
+  }catch(err){
+    alert('Error de conexión al generar la lista.');
+  }
+}
+
+/* ---- Agregar obra fuera de orden ---- */
+
+async function crearObraNueva(){
+  const msg = document.getElementById('nuevaObraMsg');
+  const dia = document.getElementById('nueva_dia').value;
+  const nro = document.getElementById('nueva_nro').value.trim();
+  const academia = document.getElementById('nueva_academia').value.trim();
+  const obra = document.getElementById('nueva_obra').value.trim();
+  const jurado = document.getElementById('nueva_jurado').value;
+  const score = document.getElementById('nueva_score').value;
+
+  if(!nro || !academia || !obra || !score){
+    msg.textContent = ' Completá al menos N°, Academia, Obra y Puntaje.';
+    msg.className = 'msg-err';
+    return;
+  }
+
+  msg.textContent = ' Guardando…'; msg.className = '';
+
+  try{
+    const archivo = document.getElementById('nueva_audio').files[0];
+    const audioBase64 = archivo ? await prepararAudioParaSubir(archivo, (texto) => { msg.textContent = ' ' + texto; }) : '';
+    if(archivo) msg.textContent = ' Guardando…';
+
+    const fd = new FormData();
+    fd.append('action', 'adminCrearObra'); fd.append('password', PASSWORD);
+    fd.append('dia', dia); fd.append('nro', nro); fd.append('academia', academia); fd.append('obra', obra);
+    fd.append('modalidad', document.getElementById('nueva_modalidad').value || '');
+    fd.append('categoria', document.getElementById('nueva_categoria').value || '');
+    fd.append('tipo', document.getElementById('nueva_tipo').value || '');
+    fd.append('compiteCoreografia', document.getElementById('nueva_compite').value || 'No');
+    fd.append('participantes', document.getElementById('nueva_participantes').value || '');
+    fd.append('jurado', jurado);
+    fd.append('score', score);
+    fd.append('scoreCoreo', document.getElementById('nueva_scoreCoreo').value || '');
+    fd.append('premio', document.getElementById('nueva_premio').value || '');
+    if(audioBase64) fd.append('audioBase64', audioBase64);
+
+    const r = await fetch(SCRIPT_URL, { method: 'POST', body: fd });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || 'No se pudo guardar.');
+
+    msg.textContent = ' ✓ Obra agregada — ya aparece en el Portal de Jurado y en el Consolidado Evaluación.';
+    msg.className = 'msg-ok';
+  }catch(err){
+    msg.textContent = ' ' + err.message; msg.className = 'msg-err';
+  }
+}
+</script>
+</body>
+</html>
