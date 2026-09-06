@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<!--
+  PURAMENTE DANZA 2026 — Portal de Resultados (público)
+  ----------------------------------------------------------------------
+  Página pública de solo lectura, sin login ni contraseña: por obra
+  muestra únicamente número de presentación, nombre de la obra, academia
+  y premio obtenido (puesto según la escala del reglamento, más
+  cualquier mención especial ya confirmada).
+
+  Gated por un interruptor propio ("Publicacion_Resultados_Publico" en
+  la planilla del jurado, manejado desde el Panel Admin de Juzgamiento,
+  panel "🌐 Portal de Resultados") — un día recién se ve acá cuando
+  Rebeca lo publicó a mano, típicamente al terminar la competencia y
+  confirmar los resultados de ese día. Antes de eso, este día aparece
+  vacío con un aviso de "todavía no se publicó".
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Resultados — Puramente Danza 2026</title>
+<link rel="icon" href="assets/iconos/favicon.ico" sizes="any">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7B2FBE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Puramente Danza">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#7B2FBE;--pd:#4E1D7F;--a:#F0C078;--txt:#2B2432;--txt-suave:#6E6079;--borde:#E4DAF0;--marfil:#FBF8FF;
+  --oro:#c9a227;--oro-bg:#FBF3DA;--plata:#7a7a7a;--plata-bg:#F0F0F0;--bronce:#a3661f;--bronce-bg:#F6E7D6;
+  --desierto:#8a7d63;--desierto-bg:#EFEBE3;--mencion:#7B2FBE;--mencion-bg:#F1E7FA;
+}
+body{
+  background:var(--marfil);
+  font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--txt);min-height:100vh;font-size:14px;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+a{color:inherit}
+
+.topbar{background:linear-gradient(90deg,var(--pd),var(--p));padding:.9rem 1.2rem;position:sticky;top:0;z-index:50;box-shadow:0 4px 14px rgba(53,19,79,.25)}
+.topbar-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:0 auto}
+.topbar h1{color:#fff;font-size:.95rem;font-weight:800}
+.topbar .sub{color:var(--a);font-size:.72rem;font-weight:600;margin-top:1px}
+
+.content{max-width:760px;margin:0 auto;padding:1.1rem 1rem 3rem}
+
+.dias-tabs{display:flex;gap:.5rem;margin-bottom:1rem}
+.btn-dia{flex:1;padding:.65rem;border:1.5px solid var(--p);border-radius:10px;background:#fff;color:var(--p);font-weight:700;font-size:.88rem;cursor:pointer}
+.btn-dia.active{background:var(--p);color:#fff}
+
+.buscador{display:flex;margin-bottom:1rem}
+.buscador input{flex:1;padding:.65rem .9rem;border:1.5px solid var(--borde);border-radius:10px;font-size:.88rem;background:#fff;color:var(--txt)}
+.buscador input:focus{outline:none;border-color:var(--p)}
+
+.estado-box{background:#fff;border-radius:12px;padding:1.6rem 1.2rem;text-align:center;color:var(--txt-suave);font-size:.88rem;box-shadow:0 4px 16px rgba(0,0,0,.06);line-height:1.5}
+.estado-box.error{color:#991B1B;background:#FEF2F2}
+
+.contador{font-size:.76rem;color:var(--txt-suave);margin-bottom:.6rem;text-align:right}
+
+.fila{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--borde);border-radius:12px;padding:.65rem .85rem;margin-bottom:.5rem}
+.fila .nro{font-weight:800;color:var(--pd);min-width:30px;font-size:.95rem;text-align:center}
+.fila .info{flex:1;min-width:0}
+.fila .obra{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fila .academia{font-size:.76rem;color:var(--txt-suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.fila .premio{font-size:.72rem;font-weight:800;padding:.3rem .6rem;border-radius:20px;white-space:nowrap;text-align:center;flex-shrink:0;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.premio-oro{background:var(--oro-bg);color:var(--oro)}
+.premio-plata{background:var(--plata-bg);color:var(--plata)}
+.premio-bronce{background:var(--bronce-bg);color:var(--bronce)}
+.premio-desierto{background:var(--desierto-bg);color:var(--desierto)}
+.premio-mencion{background:var(--mencion-bg);color:var(--mencion)}
+.premio-vacio{background:#F3F3F3;color:#999}
+
+.leyenda{font-size:.75rem;color:var(--txt-suave);text-align:center;margin:1.4rem auto 0;max-width:520px;line-height:1.5}
+.contacto-card{background:#fff;border-radius:12px;padding:1rem 1.2rem;margin-top:1.2rem;font-size:.82rem;color:#555;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.contacto-card a{color:var(--p);font-weight:700;text-decoration:none}
+
+.spinner{width:16px;height:16px;border:2.5px solid rgba(123,47,190,.25);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-fila">
+    <div>
+      <h1>🏆 Resultados</h1>
+      <div class="sub">Puramente Danza 2026</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="dias-tabs">
+    <button class="btn-dia active" id="tab-sabado" onclick="cambiarDia('Sábado')">Sábado</button>
+    <button class="btn-dia" id="tab-domingo" onclick="cambiarDia('Domingo')">Domingo</button>
+  </div>
+
+  <div class="buscador">
+    <input type="text" id="filtroTexto" placeholder="Buscar por obra o academia…" oninput="renderTodo()">
+  </div>
+
+  <div id="contador" class="contador" style="display:none;"></div>
+
+  <div id="contenido">
+    <div class="estado-box"><span class="spinner"></span> Cargando...</div>
+  </div>
+
+  <p class="leyenda">
+    Esta página se actualiza sola cada tanto. Los resultados de cada día se publican acá recién cuando
+    termina la competencia de ese día y quedan confirmados.
+  </p>
+
+  <div class="contacto-card">
+    ¿Dudas? Escribinos al <a href="https://wa.me/595994445463" target="_blank" rel="noopener">WhatsApp (0994) 445463</a>
+    o a <a href="mailto:puramentedanza@gmail.com">puramentedanza@gmail.com</a>
+  </div>
+
+</div>
+
+<script>
+window.addEventListener('error', (ev) => {
+  console.error('Error en la página:', ev.error || ev.message);
+});
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyks-M48ngn0Vhrhmyx_GgcNU5EAdId9ZTLUbHvAO2LXuZmCW_p0n8pRapccx_aKfq6Iw/exec";
+const AUTO_REFRESH_MS = 30000;
+
+let DIAS_DATA = { 'Sábado': [], 'Domingo': [] };
+let PUBLICADO = { 'Sábado': false, 'Domingo': false };
+let DIA_ACTUAL = 'Sábado';
+let CARGANDO = false;
+
+function escHtml(s){
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function normalizar(s){
+  return (s==null?'':String(s)).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+
+async function cargarTodo(silencioso){
+  if(CARGANDO) return;
+  CARGANDO = true;
+  if(!silencioso){
+    document.getElementById('contenido').innerHTML = '<div class="estado-box"><span class="spinner"></span> Cargando...</div>';
+  }
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=resultadosPublico&_ts=' + Date.now(), {cache:'no-store'});
+    const json = await res.json();
+    if(json.ok){
+      DIAS_DATA = json.dias || { 'Sábado': [], 'Domingo': [] };
+      PUBLICADO = json.publicado || { 'Sábado': false, 'Domingo': false };
+      renderTodo();
+    } else if(!silencioso){
+      document.getElementById('contenido').innerHTML = '<div class="estado-box error">❌ No se pudo cargar la información. Reintentando solo...</div>';
+    }
+  }catch(err){
+    console.error(err);
+    if(!silencioso){
+      document.getElementById('contenido').innerHTML = '<div class="estado-box error">❌ No se pudo conectar. Reintentando solo...</div>';
+    }
+  }finally{
+    CARGANDO = false;
+  }
+}
+
+function cambiarDia(dia){
+  DIA_ACTUAL = dia;
+  document.getElementById('tab-sabado').classList.toggle('active', dia==='Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', dia==='Domingo');
+  renderTodo();
+}
+
+function clasePremio(o){
+  if(o.medalla === 'oro') return 'premio-oro';
+  if(o.medalla === 'plata') return 'premio-plata';
+  if(o.medalla === 'bronce') return 'premio-bronce';
+  if(o.medalla === 'desierto') return 'premio-desierto';
+  if(o.premio && o.premio.indexOf('🏆') !== -1) return 'premio-mencion';
+  return 'premio-vacio';
+}
+
+function renderTodo(){
+  const cont = document.getElementById('contenido');
+  const contador = document.getElementById('contador');
+  const todasDelDia = DIAS_DATA[DIA_ACTUAL] || [];
+
+  if(!PUBLICADO[DIA_ACTUAL]){
+    contador.style.display = 'none';
+    cont.innerHTML = `<div class="estado-box">Todavía no se publicaron los resultados de ${DIA_ACTUAL}. Volvé a mirar más tarde.</div>`;
+    return;
+  }
+
+  if(!todasDelDia.length){
+    contador.style.display = 'none';
+    cont.innerHTML = `<div class="estado-box">Por ahora no hay resultados cargados para ${DIA_ACTUAL}.</div>`;
+    return;
+  }
+
+  const filtro = normalizar(document.getElementById('filtroTexto').value.trim());
+  const filtradas = filtro
+    ? todasDelDia.filter(o => normalizar(o.obra).indexOf(filtro) !== -1 || normalizar(o.academia).indexOf(filtro) !== -1)
+    : todasDelDia;
+
+  if(!filtradas.length){
+    contador.style.display = 'none';
+    cont.innerHTML = `<div class="estado-box">No encontramos ninguna obra o academia que coincida con "${escHtml(document.getElementById('filtroTexto').value.trim())}".</div>`;
+    return;
+  }
+
+  contador.style.display = 'block';
+  contador.textContent = filtradas.length + (filtradas.length === 1 ? ' obra' : ' obras');
+
+  cont.innerHTML = filtradas.map(o => filaHtml(o)).join('');
+}
+
+function filaHtml(o){
+  return `
+    <div class="fila">
+      <div class="nro">${escHtml(o.nro)}</div>
+      <div class="info">
+        <div class="obra">${escHtml(o.obra || '(sin nombre)')}</div>
+        <div class="academia">${escHtml(o.academia || '')}</div>
+      </div>
+      <div class="premio ${clasePremio(o)}">${escHtml(o.premio || 'Sin resultado')}</div>
+    </div>
+  `;
+}
+
+// El día del evento (5 y 6 de septiembre de 2026), esta pantalla arranca
+// directo en el día que corresponde (igual que en-vivo.html), aunque acá
+// las dos pestañas se dejan siempre visibles porque tiene sentido volver
+// a mirar el resultado de ayer.
+const FECHA_SABADO = '2026-09-05';
+const FECHA_DOMINGO = '2026-09-06';
+
+function fechaLocalHoy(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function aplicarDiaFijoDelEvento(){
+  const hoy = fechaLocalHoy();
+  let diaFijo = null;
+  if(hoy === FECHA_SABADO) diaFijo = 'Sábado';
+  else if(hoy === FECHA_DOMINGO) diaFijo = 'Domingo';
+  if(!diaFijo) return;
+  DIA_ACTUAL = diaFijo;
+  document.getElementById('tab-sabado').classList.toggle('active', diaFijo === 'Sábado');
+  document.getElementById('tab-domingo').classList.toggle('active', diaFijo === 'Domingo');
+}
+
+aplicarDiaFijoDelEvento();
+cargarTodo();
+setInterval(() => cargarTodo(true), AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
