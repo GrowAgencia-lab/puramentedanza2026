@@ -832,7 +832,7 @@ async function cargarRankingMenciones(){
         </div>
         <div class="fila-busqueda">
           <select id="mencionSelect_${idx}" style="flex:1;" onchange="onCambioMencionSelect(${idx})">
-            ${grupo.items.map((m,i) => `<option value="${i}">N° ${m.nro} — ${escHtml(m.obra)} (${escHtml(m.academia)}${m.participantes && m.participantes.length ? ' · ' + escHtml(m.participantes.join(', ')) : ''}) — ${m.puntajeMax} pts, ${m.jurados.length} jurado${m.jurados.length > 1 ? 's' : ''}</option>`).join('')}
+            ${grupo.items.map((m,i) => `<option value="${i}">N° ${m.nro} — ${escHtml(m.obra)}${m.categoria ? ' · ' + escHtml(m.categoria) : ''} (${escHtml(m.academia)}${m.participantes && m.participantes.length ? ' · ' + escHtml(m.participantes.join(', ')) : ''}) — ${m.puntajeMax} pts, ${m.jurados.length} jurado${m.jurados.length > 1 ? 's' : ''}</option>`).join('')}
             <option value="otros">Otros / carga manual…</option>
           </select>
           <button onclick="registrarGanadorDesdeGrupo(${idx})">Registrar</button>
@@ -946,7 +946,7 @@ async function verGanadores(){
     }
     cont.innerHTML = ganadores.map(g => `
       <div style="padding:8px 0; border-bottom:1px solid var(--line); font-size:13px;">
-        <strong>${escHtml(g.tipo)}</strong> — N° ${g.nro} ${escHtml(g.obra || '')} <span style="color:var(--muted); font-size:11px;">(${escHtml(g.academia || '')}${g.participante ? ' · ' + escHtml(g.participante) : ''})</span>
+        <strong>${escHtml(g.tipo)}</strong> — N° ${g.nro} ${escHtml(g.obra || '')}${g.categoria ? ' · ' + escHtml(g.categoria) : ''} <span style="color:var(--muted); font-size:11px;">(${escHtml(g.academia || '')}${g.participante ? ' · ' + escHtml(g.participante) : ''})</span>
       </div>
     `).join('');
   }catch(err){
@@ -981,10 +981,11 @@ async function imprimirGanadores(){
       <body>
         <h1>PURAMENTE DANZA 2026 — Ganadores de Premio Especial · ${dia}</h1>
         <table>
-          <tr><th>Premio</th><th>N°</th><th>Obra</th><th>Academia</th><th>Participante</th></tr>
+          <tr><th>Premio</th><th>N°</th><th>Obra</th><th>Categoría</th><th>Academia</th><th>Participante</th></tr>
           ${ganadores.map(g => `
             <tr>
               <td>${escHtml(g.tipo)}</td><td>${g.nro}</td><td>${escHtml(g.obra || '')}</td>
+              <td>${escHtml(g.categoria || '')}</td>
               <td>${escHtml(g.academia || '')}</td><td>${escHtml(g.participante || '')}</td>
             </tr>
           `).join('')}
