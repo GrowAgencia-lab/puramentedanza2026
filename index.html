@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Formulario de Inscripción — PULSO 2026</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#6B21A8;--pd:#3B0764;--a:#EAB308;--a2:#A855F7;--bg:#F3F0FF;--card:#fff;--txt:#1C1033;--txt2:#6B21A8;--borde:#DDD6FE;--rad:12px}
+body{background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;color:var(--txt);font-size:15px;line-height:1.6}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--pd) 0%,var(--p) 60%,var(--a2) 100%);padding:2rem 1rem 3rem;text-align:center;position:relative;overflow:hidden}
+.header::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:50px;background:var(--bg);border-radius:50% 50% 0 0/100% 100% 0 0}
+.header img.logo{height:90px;margin-bottom:.75rem;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3));position:relative;z-index:1}
+.header h1{color:#fff;font-size:1.2rem;font-weight:600;letter-spacing:.5px;margin-bottom:.3rem;position:relative;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.header .sub{color:var(--a);font-size:1.05rem;font-weight:700;letter-spacing:1px;position:relative;z-index:1;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+.header .fechas{color:#fff;font-size:.9rem;margin-top:.35rem;position:relative;z-index:1;background:rgba(0,0,0,.25);display:inline-block;padding:.2rem .8rem;border-radius:99px;margin-top:.5rem}
+
+/* CERRADO */
+.cerrado-banner{background:#7B2FBE;color:#fff;text-align:center;padding:1.2rem;font-size:1rem;font-weight:600;border-bottom:4px solid var(--a);display:none}
+
+/* PROGRESS */
+.progress-wrap{background:#fff;border-bottom:1px solid var(--borde);padding:.6rem 1rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.progress-bar{display:flex;gap:4px;max-width:700px;margin:0 auto}
+.p-step{flex:1;height:4px;background:#DDD6FE;border-radius:2px;transition:.3s}
+.p-step.done{background:var(--p)}.p-step.active{background:var(--a)}
+.progress-label{text-align:center;font-size:.75rem;color:var(--txt2);margin-top:.3rem;font-weight:500}
+
+/* WRAP */
+.form-wrap{max-width:700px;margin:0 auto;padding:1.5rem 1rem 4rem}
+
+/* IMAGEN BANNER */
+.banner-img{width:100%;border-radius:var(--rad);margin-bottom:1.2rem;overflow:hidden}
+.banner-img img{width:100%;display:block;border-radius:var(--rad)}
+
+/* SECCIONES */
+.seccion{background:var(--card);border-radius:var(--rad);border:1px solid var(--borde);margin-bottom:1.2rem;overflow:hidden;display:none}
+.seccion.activa{display:block}
+.sec-header{background:linear-gradient(90deg,var(--pd),var(--p));padding:.9rem 1.25rem;display:flex;align-items:center;gap:.6rem}
+.sec-header .num{background:var(--a);color:var(--pd);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+.sec-header h2{color:#fff;font-size:1rem;font-weight:600}
+.sec-body{padding:1.25rem}
+
+/* INFO BOX */
+.info-box{background:linear-gradient(135deg,#F5F0FF,#EDE9FE);border:1px solid var(--borde);border-left:4px solid var(--p);border-radius:8px;padding:.85rem 1rem;margin-bottom:1.1rem;font-size:.83rem;color:#3B0764;line-height:1.6}
+.info-box strong{display:block;margin-bottom:.2rem;font-size:.88rem}
+.warn-box{background:#FEF9C3;border:1px solid #F59E0B;border-left:4px solid #F59E0B;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.82rem;color:#78350F;line-height:1.6}
+
+/* CAMPOS */
+.campo{margin-bottom:1rem}
+.campo label{display:block;font-size:.82rem;font-weight:600;color:var(--txt2);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.4px}
+.campo label .req{color:var(--a);margin-left:2px}
+.campo input,.campo select,.campo textarea{width:100%;padding:.6rem .85rem;border:1.5px solid var(--borde);border-radius:8px;font-size:.95rem;color:var(--txt);background:#FAFAFF;transition:.2s;font-family:inherit}
+.campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--p);background:#fff;box-shadow:0 0 0 3px rgba(107,33,168,.1)}
+.campo textarea{min-height:80px;resize:vertical}
+.campo .hint{font-size:.77rem;color:#888;margin-top:.3rem}
+.campo.error input,.campo.error select{border-color:#E53E3E}
+.err-msg{color:#E53E3E;font-size:.77rem;margin-top:.25rem;display:block}
+
+/* GRIDS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+@media(max-width:540px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* LLAMADO */
+.llamado-card{background:linear-gradient(135deg,#F5F0FF,#EDE9FE);border:1px solid var(--borde);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem}
+.llamado-card h3{color:var(--pd);font-size:.9rem;font-weight:700;margin-bottom:.5rem}
+.llamado-card table{width:100%;font-size:.82rem;border-collapse:collapse}
+.llamado-card td{padding:.25rem .5rem;border-bottom:1px solid #DDD6FE}
+.llamado-card td:last-child{text-align:left;font-weight:600;color:var(--p)}
+.llamado-badge{display:inline-block;background:var(--a);color:var(--pd);padding:.2rem .7rem;border-radius:99px;font-size:.78rem;font-weight:700;margin-bottom:.5rem}
+
+/* CATASTRO */
+.catastro-box{background:#F5F0FF;border:1.5px solid var(--borde);border-radius:10px;padding:1rem}
+.catastro-tabs{display:flex;gap:.5rem;margin-bottom:.75rem}
+.catastro-tab{flex:1;padding:.45rem;border:1.5px solid var(--borde);border-radius:8px;background:#fff;color:var(--p);font-size:.82rem;font-weight:600;cursor:pointer;text-align:center;transition:.2s}
+.catastro-tab.active{background:var(--p);color:#fff;border-color:var(--p)}
+.catastro-search{display:flex;gap:.5rem;margin-bottom:.75rem}
+.catastro-search input{flex:1;font-size:.95rem;letter-spacing:.5px}
+.catastro-search button{background:var(--p);color:#fff;border:none;border-radius:8px;padding:.6rem 1rem;font-size:.85rem;cursor:pointer;white-space:nowrap;font-weight:600}
+.catastro-search button:hover{background:var(--pd)}
+.result-found{background:#F0FFF4;border:1.5px solid #68D391;border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem}
+.result-nf{background:#FFF5F5;border:1.5px solid #FC8181;border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem}
+.p-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+.p-nombre{font-weight:700;font-size:.95rem;color:var(--pd)}
+.p-detalle{font-size:.8rem;color:#555}
+.edit-inline{display:flex;gap:.4rem;margin-top:.4rem;align-items:center}
+.edit-inline input{padding:.3rem .5rem;font-size:.82rem;border:1px solid var(--borde);border-radius:6px;width:80px}
+.edit-inline label{font-size:.78rem;color:#666}
+.btn-agregar{background:#38A169;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-size:.85rem;cursor:pointer;font-weight:600;margin-top:.5rem;width:100%}
+.btn-agregar:hover{background:#276749}
+.btn-registrar{background:var(--p);color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-size:.85rem;cursor:pointer;font-weight:600;margin-top:.5rem;width:100%}
+.nuevo-form{background:#fff;border-radius:8px;padding:.75rem;margin-top:.5rem;border:1px solid var(--borde)}
+.lista-header{display:flex;align-items:center;justify-content:space-between;margin:.75rem 0 .4rem}
+.lista-header span{font-weight:700;font-size:.85rem;color:var(--pd)}
+.lista-badge-cnt{background:var(--p);color:#fff;padding:.1rem .5rem;border-radius:99px;font-size:.75rem;font-weight:700}
+.lista-item{display:flex;align-items:center;gap:.5rem;padding:.5rem .6rem;background:#fff;border-radius:8px;border:1px solid var(--borde);margin-bottom:.35rem}
+.lista-num{font-size:.75rem;color:#aaa;min-width:18px}
+.lista-nombre{flex:1;font-size:.85rem;font-weight:600;color:var(--txt)}
+.lista-ci{font-size:.75rem;color:#888}
+.lista-edad{font-size:.75rem;background:#EDE9FE;color:var(--p);padding:.1rem .45rem;border-radius:99px;white-space:nowrap}
+.lista-nuevo{font-size:.7rem;background:#FEF3C7;color:#92400E;padding:.1rem .4rem;border-radius:99px}
+.btn-quitar{background:none;border:none;cursor:pointer;color:#FC8181;font-size:1rem;padding:0 2px}
+.btn-edit-item{background:none;border:none;cursor:pointer;color:var(--p);font-size:.75rem;padding:0 4px;text-decoration:underline}
+.catastro-empty{text-align:center;color:#aaa;font-size:.85rem;padding:.75rem 0}
+
+/* TIEMPO MUSICAL */
+.tiempo-wrap{display:flex;gap:.5rem;align-items:center}
+.tiempo-wrap input{width:60px;text-align:center;font-size:1rem;font-weight:700;letter-spacing:1px}
+.tiempo-sep{font-size:1.2rem;font-weight:700;color:var(--p)}
+.tiempo-hint{font-size:.75rem;color:#888;margin-top:.3rem}
+
+/* COSTO */
+.costo-calc{background:linear-gradient(135deg,var(--pd),var(--p));border-radius:10px;padding:1rem 1.25rem;color:#fff;margin-top:1rem}
+.costo-calc .label{font-size:.8rem;opacity:.8;margin-bottom:.2rem}
+.costo-calc .monto{font-size:1.6rem;font-weight:700;color:var(--a)}
+.costo-calc .detalle{font-size:.78rem;opacity:.75;margin-top:.2rem}
+
+/* UPLOAD */
+.upload-area{border:2px dashed var(--borde);border-radius:10px;padding:1.2rem;text-align:center;cursor:pointer;transition:.2s;background:#FAFAFF}
+.upload-area:hover{border-color:var(--p);background:#F5F0FF}
+.upload-area.has-file{border-color:#38A169;background:#F0FFF4}
+.upload-area .up-icon{font-size:1.8rem;margin-bottom:.3rem}
+.upload-area p{font-size:.85rem;color:#666}
+.file-name{font-size:.82rem;font-weight:600;color:#38A169;margin-top:.3rem}
+.upload-area input[type=file]{display:none}
+
+/* BANCO */
+.banco-card{background:linear-gradient(135deg,#F5F0FF,#EDE9FE);border:1px solid var(--borde);border-radius:10px;padding:1rem 1.25rem}
+.banco-card h4{color:var(--pd);font-weight:700;margin-bottom:.6rem;font-size:.9rem}
+.banco-row{display:flex;justify-content:space-between;font-size:.85rem;padding:.2rem 0;border-bottom:1px solid #EDE9FE}
+.banco-row:last-child{border:none}
+.banco-row .val{font-weight:700;color:var(--p)}
+
+/* TÉRMINOS */
+.terms-box{background:#F9F5FF;border:1px solid var(--borde);border-radius:10px;padding:1rem;max-height:160px;overflow-y:auto;font-size:.8rem;color:#444;margin-bottom:.75rem;line-height:1.7}
+.check-row{display:flex;align-items:flex-start;gap:.5rem;cursor:pointer;margin-bottom:.5rem}
+.check-row input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--p);flex-shrink:0}
+.check-row span{font-size:.85rem;color:var(--txt)}
+.reglamento-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--p);font-weight:600;font-size:.85rem;text-decoration:none;background:#EDE9FE;padding:.4rem .8rem;border-radius:8px;margin-bottom:1rem}
+.reglamento-link:hover{background:#DDD6FE}
+
+/* BOTONES */
+.nav-btns{display:flex;gap:.75rem;margin-top:1.25rem}
+.btn-prev{flex:1;padding:.75rem;border:2px solid var(--borde);border-radius:10px;background:#fff;color:var(--p);font-size:.95rem;font-weight:600;cursor:pointer;transition:.2s}
+.btn-prev:hover{border-color:var(--p);background:#F5F0FF}
+.btn-next{flex:2;padding:.75rem;background:linear-gradient(90deg,var(--p),var(--a2));border:none;border-radius:10px;color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;transition:.2s}
+.btn-next:hover{opacity:.9;transform:translateY(-1px)}
+.btn-submit{flex:2;padding:.85rem;background:linear-gradient(90deg,var(--a),#F59E0B);border:none;border-radius:10px;color:var(--pd);font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.3px}
+.btn-submit:hover{opacity:.9}.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+.spinner{display:none;width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ÉXITO */
+.exito{display:none;text-align:center;padding:2.5rem 1.5rem}
+.exito .check-big{font-size:3.5rem;margin-bottom:1rem}
+.exito h2{color:var(--pd);font-size:1.4rem;margin-bottom:.5rem}
+.exito p{color:#555;font-size:.9rem;max-width:380px;margin:0 auto .75rem}
+.exito .id-insc{background:#EDE9FE;border-radius:8px;padding:.5rem 1rem;font-weight:700;color:var(--p);font-size:.9rem;display:inline-block;margin-top:.5rem}
+
+@media(max-width:480px){.header img.logo{height:65px}.sec-body{padding:.9rem}.form-wrap{padding:1rem .75rem 3rem}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img class="logo" src="logo.png" alt="PULSO"/>
+  <h1>Formulario de Inscripción Oficial</h1>
+  <div class="sub">8va Edición 2026 · ¡Vibramos Alto!</div>
+  <div class="fechas">8 al 14 de Septiembre · Asunción, Paraguay</div>
+</div>
+
+<div class="cerrado-banner" id="cerrado-banner"></div>
+
+<div class="progress-wrap">
+  <div class="progress-bar" id="progress-bar"></div>
+  <div class="progress-label" id="progress-label"></div>
+</div>
+
+<div class="form-wrap">
+
+<!-- BANNER FLYER -->
+<div class="banner-img">
+  <img src="flyer.png" alt="PULSO 2026 — 8 al 14 de Septiembre"/>
+</div>
+
+<form id="main-form" novalidate>
+
+<!-- SEC 1: INSTITUCIÓN -->
+<div class="seccion activa" id="sec-1">
+  <div class="sec-header"><div class="num">1</div><h2>Datos de la institución</h2></div>
+  <div class="sec-body">
+    <div class="info-box">
+      <strong>📋 Instrucciones</strong>
+      El formulario debe ser completado por el director/a, maestro/a coreógrafo/a, maestro/a ensayador/a o personal administrativo representante de la institución. Las inscripciones deben realizarse desde el correo de la institución o del director/maestro responsable. <strong>No se aceptan inscripciones desde correos particulares de alumnos o familiares.</strong><br><br><strong>⚠ Si tenés más de una presentación, debés completar un formulario por cada obra.</strong>
+      <div style="margin-top:.5rem;padding:.4rem .6rem;background:rgba(107,33,168,.08);border-radius:6px;font-size:.82rem;word-break:break-all;white-space:normal">📌 ¿No encontrás tu institución? Escribinos al +595986250000 o a<br>pulsofestivalinternacional@gmail.com</div>
+    </div>
+    <div class="campo">
+      <label>Email institucional <span class="req">*</span></label>
+      <input type="text" id="email" placeholder="academia@correo.com" required pattern="[^@]+@[^@]+\.[^@]+" title="Ingresá un email válido"/>
+      <span class="hint">Usá el correo de la institución o del director/maestro responsable</span>
+    </div>
+    <div class="campo">
+      <label>Institución <span class="req">*</span></label>
+      <select id="institucion" required>
+        <option value="">— Seleccioná —</option>
+        <option value="Academia Angeles">1. Academia Angeles</option>
+        <option value="Academia Ballet Robson Maia & Mechi Gayo">2. Academia Ballet Robson Maia & Mechi Gayo</option>
+        <option value="Academia Cien X Ciento Danza">3. Academia Cien X Ciento Danza</option>
+        <option value="Academia Cooperativa Ñemby">4. Academia Cooperativa Ñemby</option>
+        <option value="Academia Cynthia Grance">5. Academia Cynthia Grance</option>
+        <option value="Academia Danzando">6. Academia Danzando</option>
+        <option value="Academia Danzarina Rory">7. Academia Danzarina Rory</option>
+        <option value="Academia de Ballet Marisol Garay">8. Academia de Ballet Marisol Garay</option>
+        <option value="Academia de Ballet Patricia Manavella">9. Academia de Ballet Patricia Manavella</option>
+        <option value="Academia de Danza Alma Arzamendia">10. Academia de Danza Alma Arzamendia</option>
+        <option value="Academia de Danza Bienandanzas">11. Academia de Danza Bienandanzas</option>
+        <option value="Academia de Danza Chely Moreno">12. Academia de Danza Chely Moreno</option>
+        <option value="Academia de Danza Ciria Machuca">13. Academia de Danza Ciria Machuca</option>
+        <option value="Academia de Danza Cofan Ltda">14. Academia de Danza Cofan Ltda</option>
+        <option value="Academia de Danza Geraldine Doldan">15. Academia de Danza Geraldine Doldan</option>
+        <option value="Academia de Danza Janet Magalí">16. Academia de Danza Janet Magalí</option>
+        <option value="Academia de Danza Laura Troche">17. Academia de Danza Laura Troche</option>
+        <option value="Academia de Danza Leila Martínez">18. Academia de Danza Leila Martínez</option>
+        <option value="Academia de Danza Lizarte">19. Academia de Danza Lizarte</option>
+        <option value="Academia de Danza Noemí Adorno">20. Academia de Danza Noemí Adorno</option>
+        <option value="Academia de Danza Pytyvõ">21. Academia de Danza Pytyvõ</option>
+        <option value="Academia de Danza Talentos">22. Academia de Danza Talentos</option>
+        <option value="Academia de Danza Vyá Renda">23. Academia de Danza Vyá Renda</option>
+        <option value="Academia de Danza Yvága Rape By: Las Gemelas">24. Academia de Danza Yvága Rape By: Las Gemelas</option>
+        <option value="Academia de Danza Zully Vinader">25. Academia de Danza Zully Vinader</option>
+        <option value="Academia de Danzas ADD">26. Academia de Danzas ADD</option>
+        <option value="Academia de Danzas Aery Koda">27. Academia de Danzas Aery Koda</option>
+        <option value="Academia de Danzas Ana Cristina">28. Academia de Danzas Ana Cristina</option>
+        <option value="Academia de Danzas Arasy">29. Academia de Danzas Arasy</option>
+        <option value="Academia de Danzas Bethania">30. Academia de Danzas Bethania</option>
+        <option value="Academia de Danzas Bio Dance">31. Academia de Danzas Bio Dance</option>
+        <option value="Academia de Danzas Corinna y Elvira">32. Academia de Danzas Corinna y Elvira</option>
+        <option value="Academia de Danzas Cynthia Noguera">33. Academia de Danzas Cynthia Noguera</option>
+        <option value="Academia de Danzas Dana Studio Ballet">34. Academia de Danzas Dana Studio Ballet</option>
+        <option value="Academia de Danzas Danzar">35. Academia de Danzas Danzar</option>
+        <option value="Academia de Danzas Diana Ocampos">36. Academia de Danzas Diana Ocampos</option>
+        <option value="Academia de Danzas Elina Corrales">37. Academia de Danzas Elina Corrales</option>
+        <option value="Academia de Danzas Elizabeth Vinader">38. Academia de Danzas Elizabeth Vinader</option>
+        <option value="Academia de Danzas Filigrana">39. Academia de Danzas Filigrana</option>
+        <option value="Academia de Danzas GlauDance">40. Academia de Danzas GlauDance</option>
+        <option value="Academia de Danzas Guyra Campana">41. Academia de Danzas Guyra Campana</option>
+        <option value="Academia de Danzas Jessica Arias">42. Academia de Danzas Jessica Arias</option>
+        <option value="Academia de Danzas Laura Carles">43. Academia de Danzas Laura Carles</option>
+        <option value="Academia de Danzas Leticia Martínez">44. Academia de Danzas Leticia Martínez</option>
+        <option value="Academia de Danzas Lilian Benítez">45. Academia de Danzas Lilian Benítez</option>
+        <option value="Academia de Danzas Lilú Torres">46. Academia de Danzas Lilú Torres</option>
+        <option value="Academia de Danzas Luceli">47. Academia de Danzas Luceli</option>
+        <option value="Academia de Danzas Mercedes Cabrera">48. Academia de Danzas Mercedes Cabrera</option>
+        <option value="Academia de Danzas Mila Ballet">49. Academia de Danzas Mila Ballet</option>
+        <option value="Academia de Danzas Mónica Insfrán">50. Academia de Danzas Mónica Insfrán</option>
+        <option value="Academia de Danzas Ñasaindy">51. Academia de Danzas Ñasaindy</option>
+        <option value="Academia de Danzas Paloma Quiñonez">52. Academia de Danzas Paloma Quiñonez</option>
+        <option value="Academia de Danzas Patricia Fiandro">53. Academia de Danzas Patricia Fiandro</option>
+        <option value="Academia de Danzas Pirouette">54. Academia de Danzas Pirouette</option>
+        <option value="Academia de Danzas Positiva Dance">55. Academia de Danzas Positiva Dance</option>
+        <option value="Academia de Danzas Ritmo y Color">56. Academia de Danzas Ritmo y Color</option>
+        <option value="Academia de Danzas Rossanna Torres">57. Academia de Danzas Rossanna Torres</option>
+        <option value="Academia de Danzas Ruth Encina">58. Academia de Danzas Ruth Encina</option>
+        <option value="Academia de Danzas Simone Petit Danse">59. Academia de Danzas Simone Petit Danse</option>
+        <option value="Academia de Danzas Stella Villasanti">60. Academia de Danzas Stella Villasanti</option>
+        <option value="Academia de Danzas Stylo's">61. Academia de Danzas Stylo's</option>
+        <option value="Academia de Danzas Susy Sánchez">62. Academia de Danzas Susy Sánchez</option>
+        <option value="Academia de Danzas Todo Ritmo">63. Academia de Danzas Todo Ritmo</option>
+        <option value="Academia de Danzas Vanessa Wachholz">64. Academia de Danzas Vanessa Wachholz</option>
+        <option value="Academia de Danzas Yeroky">65. Academia de Danzas Yeroky</option>
+        <option value="Academia de Danzas Yeruti">66. Academia de Danzas Yeruti</option>
+        <option value="Academia de Danzas Zaira Caballero">67. Academia de Danzas Zaira Caballero</option>
+        <option value="Academia Esencias de mi tierra">68. Academia Esencias de mi tierra</option>
+        <option value="Academia Fusiones Dance & Cía.">69. Academia Fusiones Dance & Cía.</option>
+        <option value="Academia Ingrid Frutos">70. Academia Ingrid Frutos</option>
+        <option value="Academia Irina Vikhareva">71. Academia Irina Vikhareva</option>
+        <option value="Academia La Lupe">72. Academia La Lupe</option>
+        <option value="Academia Martha Vera">73. Academia Martha Vera</option>
+        <option value="Academia Orué Danzas">74. Academia Orué Danzas</option>
+        <option value="Academia Petronita Vinader">75. Academia Petronita Vinader</option>
+        <option value="Academia Yerutí">76. Academia Yerutí</option>
+        <option value="AG Centro Artístico">77. AG Centro Artístico</option>
+        <option value="Allegro Academia de Danza">78. Allegro Academia de Danza</option>
+        <option value="Alma Mater Escuela de Ballet">79. Alma Mater Escuela de Ballet</option>
+        <option value="Amalia Gamarra Estudio de Danza">80. Amalia Gamarra Estudio de Danza</option>
+        <option value="Anabel Dance Estudio de Danzas y Competicion">81. Anabel Dance Estudio de Danzas y Competicion</option>
+        <option value="Antología Danza y Arte">82. Antología Danza y Arte</option>
+        <option value="Arte en Movimiento Studio de Danzas">83. Arte en Movimiento Studio de Danzas</option>
+        <option value="ArteSpazio Academia de Danza">84. ArteSpazio Academia de Danza</option>
+        <option value="Austria Estudio Danza y Arte">85. Austria Estudio Danza y Arte</option>
+        <option value="Avances Internacional Ballet y Cía.">86. Avances Internacional Ballet y Cía.</option>
+        <option value="Ballet Folclórico Municipal de Encarnación">87. Ballet Folclórico Municipal de Encarnación</option>
+        <option value="Bayadére Centro de Arte">88. Bayadére Centro de Arte</option>
+        <option value="Belén Molinas Academia de Danzas">89. Belén Molinas Academia de Danzas</option>
+        <option value="Carmen Estudio de Arte">90. Carmen Estudio de Arte</option>
+        <option value="Carmen Salinas Estudio de Danzas">91. Carmen Salinas Estudio de Danzas</option>
+        <option value="Cascanueces Escuela de Ballet">92. Cascanueces Escuela de Ballet</option>
+        <option value="Centro de Arte NR">93. Centro de Arte NR</option>
+        <option value="Centro de Danzas Jeroky Paraguai">94. Centro de Danzas Jeroky Paraguai</option>
+        <option value="Col Dan's Academia de Danzas">95. Col Dan's Academia de Danzas</option>
+        <option value="Compasses Escuela de Danza">96. Compasses Escuela de Danza</option>
+        <option value="Conservatorio de Arte Esther Villasanti">97. Conservatorio de Arte Esther Villasanti</option>
+        <option value="Conservatorio de Danza Reina Menchaca">98. Conservatorio de Danza Reina Menchaca</option>
+        <option value="Conservatorio de Danzas Baila Conmigo">99. Conservatorio de Danzas Baila Conmigo</option>
+        <option value="Cuerpo y Movimiento Giannina Pizzani">100. Cuerpo y Movimiento Giannina Pizzani</option>
+        <option value="Dancisti-k Ballet">101. Dancisti-k Ballet</option>
+        <option value="Danzarte Estudio de Danza">102. Danzarte Estudio de Danza</option>
+        <option value="Danzas María Asunción">103. Danzas María Asunción</option>
+        <option value="Df Academia de Danza">104. Df Academia de Danza</option>
+        <option value="Elizabeth Vinader Latin Dance">105. Elizabeth Vinader Latin Dance</option>
+        <option value="Esc.Munic.de Danza de CDE">106. Esc.Munic.de Danza de CDE</option>
+        <option value="Esc.Munic.de Danza de Villa Hayes">107. Esc.Munic.de Danza de Villa Hayes</option>
+        <option value="Esc.Munic.de Danza Dr. Juan Manuel Frutos">108. Esc.Munic.de Danza Dr. Juan Manuel Frutos</option>
+        <option value="Esc.Munic.de Danza IMA - Asunción">109. Esc.Munic.de Danza IMA - Asunción</option>
+        <option value="Esc.Munic.de Danzas Ciudad Vaquería">110. Esc.Munic.de Danzas Ciudad Vaquería</option>
+        <option value="Esc.Munic.de Danzas de Capiatá">111. Esc.Munic.de Danzas de Capiatá</option>
+        <option value="Esc.Munic.De Danzas de Carapegua">112. Esc.Munic.De Danzas de Carapegua</option>
+        <option value="Esc.Munic.de Danzas de Escobar">113. Esc.Munic.de Danzas de Escobar</option>
+        <option value="Esc.Munic.de Danzas de Hernandarias">114. Esc.Munic.de Danzas de Hernandarias</option>
+        <option value="Esc.Munic.de Danzas de la Ciudad de San Antonio">115. Esc.Munic.de Danzas de la Ciudad de San Antonio</option>
+        <option value="Esc.Munic.de Danzas de Lambaré">116. Esc.Munic.de Danzas de Lambaré</option>
+        <option value="Esc.Munic.de Danzas de Limpio">117. Esc.Munic.de Danzas de Limpio</option>
+        <option value="Esc.Munic.de Danzas de Ñemby">118. Esc.Munic.de Danzas de Ñemby</option>
+        <option value="Esc.Munic.de Danzas de Valenzuela">119. Esc.Munic.de Danzas de Valenzuela</option>
+        <option value="Esc.Munic.de Danzas de Villa Elisa">120. Esc.Munic.de Danzas de Villa Elisa</option>
+        <option value="Esc.Munic.de Danzas de Villarrica">121. Esc.Munic.de Danzas de Villarrica</option>
+        <option value="Esc.Munic.de Fernando de la Mora">122. Esc.Munic.de Fernando de la Mora</option>
+        <option value="Escuela de Arte Alex Martínez">123. Escuela de Arte Alex Martínez</option>
+        <option value="Escuela de Arte Giuliano Danza y Cía">124. Escuela de Arte Giuliano Danza y Cía</option>
+        <option value="Escuela de Arte Maria Jose Id">125. Escuela de Arte Maria Jose Id</option>
+        <option value="Escuela de Danza Mainumby">126. Escuela de Danza Mainumby</option>
+        <option value="Escuela de Danza Pykasu Jeroky">127. Escuela de Danza Pykasu Jeroky</option>
+        <option value="Escuela de Danzas Ballerina Estudio">128. Escuela de Danzas Ballerina Estudio</option>
+        <option value="Escuela de Danzas Kuarahy Mimbi">129. Escuela de Danzas Kuarahy Mimbi</option>
+        <option value="Escuela de Danzas Marisol Valdez">130. Escuela de Danzas Marisol Valdez</option>
+        <option value="Escuela de Danzas Nathalia Hermosilla">131. Escuela de Danzas Nathalia Hermosilla</option>
+        <option value="Escuela de Danzas Pykasu">132. Escuela de Danzas Pykasu</option>
+        <option value="Escuela de Danzas Yasy">133. Escuela de Danzas Yasy</option>
+        <option value="Escuela Municipal de Encarnación">134. Escuela Municipal de Encarnación</option>
+        <option value="Escuela Municipal de Mariano Roque Alonso">135. Escuela Municipal de Mariano Roque Alonso</option>
+        <option value="Esencias Estudio de Arte">136. Esencias Estudio de Arte</option>
+        <option value="Espacio Artístico Macarena Vinader">137. Espacio Artístico Macarena Vinader</option>
+        <option value="Estudio Bailarte">138. Estudio Bailarte</option>
+        <option value="Estudio Ballet Tekove">139. Estudio Ballet Tekove</option>
+        <option value="Estudio Ballet Yracema">140. Estudio Ballet Yracema</option>
+        <option value="Estudio de Arte Coreográfico Bonnin">141. Estudio de Arte Coreográfico Bonnin</option>
+        <option value="Estudio de Arte Mercedes Lezcano">142. Estudio de Arte Mercedes Lezcano</option>
+        <option value="Estudio de Arte Sonia Soto">143. Estudio de Arte Sonia Soto</option>
+        <option value="Estudio de Artes Alma y Vida">144. Estudio de Artes Alma y Vida</option>
+        <option value="Estudio de Ballet Ada Zarate - ADANZAR">145. Estudio de Ballet Ada Zarate - ADANZAR</option>
+        <option value="Estudio de Danza Bia Lu">146. Estudio de Danza Bia Lu</option>
+        <option value="Estudio de Danza Carmen Acosta">147. Estudio de Danza Carmen Acosta</option>
+        <option value="Estudio de Danza Patty Peña">148. Estudio de Danza Patty Peña</option>
+        <option value="Estudio de Danzas Alice Martínez">149. Estudio de Danzas Alice Martínez</option>
+        <option value="Estudio de Danzas Expresarte">150. Estudio de Danzas Expresarte</option>
+        <option value="Estudio de Danzas Pas de Danse">151. Estudio de Danzas Pas de Danse</option>
+        <option value="Estudio de Danzas Querubines">152. Estudio de Danzas Querubines</option>
+        <option value="Estudio de Danzas Ritmo y Expresión">153. Estudio de Danzas Ritmo y Expresión</option>
+        <option value="Estudio Nicole Dijkhuis">154. Estudio Nicole Dijkhuis</option>
+        <option value="Evolución Academia de Danza">155. Evolución Academia de Danza</option>
+        <option value="FabiPar Dance Studio">156. FabiPar Dance Studio</option>
+        <option value="Fisiodanz Academia de Danzas">157. Fisiodanz Academia de Danzas</option>
+        <option value="Fouetté Studio">158. Fouetté Studio</option>
+        <option value="Freddy Vázquez Estudio de Danzas">159. Freddy Vázquez Estudio de Danzas</option>
+        <option value="Gera Estudio">160. Gera Estudio</option>
+        <option value="Gimnasio Acroartistic">161. Gimnasio Acroartistic</option>
+        <option value="Giuliano Danza y Compañía">162. Giuliano Danza y Compañía</option>
+        <option value="Grupo de Danzas Municipal de Natalio">163. Grupo de Danzas Municipal de Natalio</option>
+        <option value="IFA Medalla Milagrosa">164. IFA Medalla Milagrosa</option>
+        <option value="Instituto DanzArabe Py">165. Instituto DanzArabe Py</option>
+        <option value="Instituto de Arte Coosofan">166. Instituto de Arte Coosofan</option>
+        <option value="Instituto de Arte la Candelaria">167. Instituto de Arte la Candelaria</option>
+        <option value="Instituto de Danza Olga Doldan">168. Instituto de Danza Olga Doldan</option>
+        <option value="Instituto de Danzas Martha Luz">169. Instituto de Danzas Martha Luz</option>
+        <option value="Instituto Municipal de Arte - San Lorenzo - IMA">170. Instituto Municipal de Arte - San Lorenzo - IMA</option>
+        <option value="Instituto Natalia Tanaka">171. Instituto Natalia Tanaka</option>
+        <option value="Instituto Superior de Bellas Artes">172. Instituto Superior de Bellas Artes</option>
+        <option value="Irun Dance Crecer">173. Irun Dance Crecer</option>
+        <option value="Jessica Torres Estudio">174. Jessica Torres Estudio</option>
+        <option value="Jhoana Guerrero Academia de Danza">175. Jhoana Guerrero Academia de Danza</option>
+        <option value="Laura Troche Academia de Danza">176. Laura Troche Academia de Danza</option>
+        <option value="Leryn Rojas Dance Studio">177. Leryn Rojas Dance Studio</option>
+        <option value="Leticia Martínez Escuela de Danza">178. Leticia Martínez Escuela de Danza</option>
+        <option value="Lorena Azucas Escuela de Artes">179. Lorena Azucas Escuela de Artes</option>
+        <option value="Luis Calderini Danza y Cía.">180. Luis Calderini Danza y Cía.</option>
+        <option value="Lupe Studio">181. Lupe Studio</option>
+        <option value="Maidana Academy Of Ballet">182. Maidana Academy Of Ballet</option>
+        <option value="Marisol Pecci Danzas">183. Marisol Pecci Danzas</option>
+        <option value="Más que Danza Compañía de Baile">184. Más que Danza Compañía de Baile</option>
+        <option value="Mitanguera Bañadogua Jeroky Escuela de Danzas CAMSAT">185. Mitanguera Bañadogua Jeroky Escuela de Danzas CAMSAT</option>
+        <option value="Mónica Núnez Expresión Corporal">186. Mónica Núnez Expresión Corporal</option>
+        <option value="Natalia Valdez Movimientos">187. Natalia Valdez Movimientos</option>
+        <option value="NaVaDance by Natalia Valdez">188. NaVaDance by Natalia Valdez</option>
+        <option value="Nicole Studio de Arte y Danza">189. Nicole Studio de Arte y Danza</option>
+        <option value="Noefer Danzas">190. Noefer Danzas</option>
+        <option value="Núcleo de Arte y Danza">191. Núcleo de Arte y Danza</option>
+        <option value="NyC Arte Studio Ballet">192. NyC Arte Studio Ballet</option>
+        <option value="Paola Gauto Danza">193. Paola Gauto Danza</option>
+        <option value="Passiones Academia de Danza">194. Passiones Academia de Danza</option>
+        <option value="Paz Benítez Estudio de Danza">195. Paz Benítez Estudio de Danza</option>
+        <option value="Paz Dance Studio">196. Paz Dance Studio</option>
+        <option value="Petite Centro de Artes PJC">197. Petite Centro de Artes PJC</option>
+        <option value="Poletti Estudio de Danza">198. Poletti Estudio de Danza</option>
+        <option value="Pro Danza">199. Pro Danza</option>
+        <option value="Raices Estudio de Danzas">200. Raices Estudio de Danzas</option>
+        <option value="Romar Academia de Danzas">201. Romar Academia de Danzas</option>
+        <option value="Rosanna Paredes Academia de Danza">202. Rosanna Paredes Academia de Danza</option>
+        <option value="Rytmo & Danza">203. Rytmo & Danza</option>
+        <option value="Silvana Romero Studio Ballet">204. Silvana Romero Studio Ballet</option>
+        <option value="Studio Analia Bogado Ballet">205. Studio Analia Bogado Ballet</option>
+        <option value="Studio de Arte Wballet">206. Studio de Arte Wballet</option>
+        <option value="Sussy Sacco La Academia">207. Sussy Sacco La Academia</option>
+        <option value="Taller de Danzas Lilian Garicoche">208. Taller de Danzas Lilian Garicoche</option>
+        <option value="Team Elite Cascanueces">209. Team Elite Cascanueces</option>
+        <option value="Terra Nostra Volkstanzschule">210. Terra Nostra Volkstanzschule</option>
+        <option value="Top Dance CDE">211. Top Dance CDE</option>
+        <option value="Vidance la Academia">212. Vidance la Academia</option>
+        <option value="Vivencias Estudio de Danza">213. Vivencias Estudio de Danza</option>
+      </select>
+    </div>
+    <div class="campo" id="campo-inst-nombre" style="display:none">
+      <input type="text" id="inst-nombre" style="display:none"/>
+    </div>
+    <div class="grid2">
+      <div class="campo">
+        <label>Nombre del/la director/a <span class="req">*</span></label>
+        <input type="text" id="director" placeholder="Nombre completo" required/>
+      </div>
+      <div class="campo">
+        <label>Teléfono de contacto <span class="req">*</span></label>
+        <input type="tel" id="telefono" placeholder="(09XX) XXX-XXX" required/>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button type="button" class="btn-next" onclick="irSeccion(2)">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEC 2: COREOGRAFÍA -->
+<div class="seccion" id="sec-2">
+  <div class="sec-header"><div class="num">2</div><h2>Datos de la coreografía</h2></div>
+  <div class="sec-body">
+    <div class="info-box">
+      <strong>🎭 Datos de la presentación artística</strong>
+      Completá los datos de cada coreografía por separado. Si tenés más de una presentación, deberás completar un formulario por cada una.
+    </div>
+    <div class="grid2">
+      <div class="campo">
+        <label>Nombre de la obra <span class="req">*</span></label>
+        <input type="text" id="obra" required/>
+      </div>
+      <div class="campo">
+        <label>Modalidad <span class="req">*</span></label>
+        <select id="modalidad" required>
+        <option value="">— Seleccioná —</option>
+        <option value="Ballet Clásico Repertorio">Ballet Clásico Repertorio</option>
+        <option value="Ballet Clásico Libre">Ballet Clásico Libre</option>
+        <option value="Neoclásico">Neoclásico</option>
+        <option value="Contemporáneo">Contemporáneo</option>
+        <option value="Jazz">Jazz</option>
+        <option value="Técnica Libre">Técnica Libre</option>
+        <option value="Danza Paraguaya">Danza Paraguaya</option>
+        <option value="Danza Española">Danza Española</option>
+        <option value="Folklore Internacional">Folklore Internacional</option>
+        <option value="Acrodance">Acrodance</option>
+        <option value="Libre / Show / Urban">Libre / Show / Urban</option>
+      </select>
+      </div>
+    </div>
+    <div class="campo" id="campo-subestilo" style="display:none">
+      <label>Estilo / División <span class="req">*</span></label>
+      <select id="subestilo"><option value="">— Seleccioná —</option></select>
+    </div>
+    <div class="grid2">
+      <div class="campo">
+        <label>Categoría <span class="req">*</span></label>
+        <select id="categoria" required>
+        <option value="">— Seleccioná —</option>
+        <option value="baby">Baby (3 a 4 años)</option>
+        <option value="mini">Mini (5 a 6 años)</option>
+        <option value="kids1">Kids I (7 a 8 años)</option>
+        <option value="kids2">Kids II (9 a 10 años)</option>
+        <option value="kids3">Kids III (11 a 12 años)</option>
+        <option value="junior">Junior (13 a 14 años)</option>
+        <option value="teens">Teens (15 a 17 años)</option>
+        <option value="senior">Senior (18 a 25 años)</option>
+        <option value="adulto">Adulto (26 años en adelante)</option>
+        <option value="profesional">Profesionales</option>
+      </select>
+      </div>
+      <div class="campo">
+        <label>Tipo de participación <span class="req">*</span></label>
+        <select id="tipo-part" required>
+          <option value="">— Seleccioná —</option>
+          <option value="solista">Solista</option>
+          <option value="duo">Dúo (2 participantes)</option>
+          <option value="trio">Trío (3 participantes)</option>
+          <option value="cuarteto">Cuarteto (4 participantes)</option>
+          <option value="grupo">Grupo (5 a 10 participantes)</option>
+          <option value="gran_grupo">Gran Grupo (11 o más)</option>
+        </select>
+      </div>
+    </div>
+    <div id="aviso-cierre" style="display:none;background:#FEE2E2;border:1.5px solid #FCA5A5;color:#991B1B;border-radius:8px;padding:.7rem .9rem;font-size:.85rem;font-weight:600;margin-bottom:1rem"></div>
+    <div class="grid2">
+      <div class="campo">
+        <label>Maestro/a Coreógrafo/a <span class="req">*</span></label>
+        <input type="text" id="coreografo" required/>
+      </div>
+      <div class="campo">
+        <label>Maestro/a Preparador/a <span class="req">*</span></label>
+        <input type="text" id="preparador" required/>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="campo">
+        <label>Contacto del responsable <span class="req">*</span></label>
+        <input type="tel" id="contacto-resp" placeholder="(09XX) XXX-XXX" required/>
+      </div>
+      <div class="campo">
+        <label>¿Compite por coreografía?</label>
+        <select id="compite-coreo"><option value="no">No</option><option value="si">Sí</option></select>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button type="button" class="btn-prev" onclick="irSeccion(1)">← Anterior</button>
+      <button type="button" class="btn-next" onclick="irSeccion(3)">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEC 3: PARTICIPANTES -->
+<div class="seccion" id="sec-3">
+  <div class="sec-header"><div class="num">3</div><h2>Registro de Participantes</h2></div>
+  <div class="sec-body">
+    <div class="info-box">
+      <strong>👥 Registro de Participantes</strong>
+      Buscá a cada participante por CI o por nombre y agregalo a la coreografía. Si no aparece, buscá su nombre en la pestaña "Buscar por nombre" — ahí aparecerá la opción de registrarlo como nuevo.<br><br>
+      <strong>⚠ Importante:</strong> Es obligatorio registrar con el <strong>NOMBRE COMPLETO (ambos nombres y ambos apellidos)</strong>. Si el participante ya está registrado con datos incompletos, favor completarlos y actualizarlos antes de agregar.
+    </div>
+    <div class="campo" id="campo-cantidad" style="display:none">
+      <label>Cantidad de participantes de la coreografía <span class="req">*</span></label>
+      <input type="number" id="cant-participantes" min="1" max="200" placeholder="Ej: 8" oninput="actualizarCantidad()" style="max-width:150px"/>
+    </div>
+
+    <div class="catastro-box">
+      <div class="catastro-tabs">
+        <button type="button" class="catastro-tab active" onclick="setTab('ci')">🪪 Buscar por CI</button>
+        <button type="button" class="catastro-tab" onclick="setTab('nombre')">🔤 Buscar por nombre</button>
+      </div>
+      <div id="tab-ci">
+        <div class="catastro-search">
+          <input type="text" id="ci-buscar" placeholder="Nro. de cédula..." maxlength="10" inputmode="numeric"/>
+          <button type="button" onclick="buscarCI()">Buscar</button>
+        </div>
+      </div>
+      <div id="tab-nombre" style="display:none">
+        <div class="catastro-search">
+          <input type="text" id="nombre-buscar" placeholder="Nombre o apellido..."/>
+          <button type="button" onclick="buscarNombre()">Buscar</button>
+        </div>
+      </div>
+      <div id="nombre-resultados"></div>
+      <div id="ci-resultado"></div>
+      <div id="nuevo-registro-form"></div>
+      <div style="margin-bottom:.6rem">
+        <button type="button" class="btn-registrar" style="width:100%" onclick="mostrarFormNuevo('')">+ Registrar nuevo participante</button>
+      </div>
+      <div id="lista-progreso" style="display:none;font-size:.8rem;font-weight:600;margin-bottom:.35rem"></div>
+      <div class="lista-header">
+        <span>Participantes agregados</span>
+        <span class="lista-badge-cnt" id="lista-count">0</span>
+      </div>
+      <div id="lista-items"><div class="catastro-empty">Aún no agregaste participantes</div></div>
+    </div>
+    <div class="nav-btns">
+      <button type="button" class="btn-prev" onclick="irSeccion(2)">← Anterior</button>
+      <button type="button" class="btn-next" onclick="irSeccion(4)">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEC 4: MÚSICA Y ESCENOGRAFÍA -->
+<div class="seccion" id="sec-4">
+  <div class="sec-header"><div class="num">4</div><h2>Música y escenografía</h2></div>
+  <div class="sec-body">
+    <div class="warn-box">
+      <strong>⚠️ Datos de la música — importante</strong>
+      Antes de subir el archivo MP3, renombralo así: <strong>NombreObra-Participacion-Modalidad-Institucion</strong><br>
+      Ej: <em>AuroraBoreal-Conjunto-TecnicaLibre-DANCESTUDIO</em><br>
+      El tiempo de envío de la pista queda sujeto a la fecha de inscripción. Se permite <strong>1 cambio sin costo</strong> hasta 3 días antes del festival. El 2° cambio tiene costo de Gs. 50.000.<br><br>
+      <strong>Penalizaciones por tiempo:</strong> 10-30 seg: -0,5 pts/jurado · 30-90 seg: -1 pto/jurado · 90-180 seg: -2 pts/jurado · +180 seg: descalificación.<br>
+      Excepción: Flamenco/música en vivo tiene límite de 8 minutos.
+    </div>
+
+    <div class="campo">
+      <label>Tipo de música <span class="req">*</span></label>
+      <select id="tipo-musica" onchange="toggleMusica()" required>
+        <option value="">— Seleccioná —</option>
+        <option value="mp3">Música en archivo (MP3)</option>
+        <option value="vivo">Música en vivo</option>
+      </select>
+    </div>
+
+    <div id="bloque-mp3">
+      <div class="campo">
+        <label>Archivo de música (MP3) <span class="req">*</span></label>
+        <div class="upload-area" id="upload-musica-area" onclick="document.getElementById('upload-musica').click()">
+          <div class="up-icon">🎵</div>
+          <p>Tocá para subir el MP3</p>
+          <div class="file-name" id="musica-nombre"></div>
+        </div>
+        <input type="file" id="upload-musica" accept=".mp3,audio/*" onchange="archivoSeleccionado(this,'upload-musica-area','musica-nombre')"/>
+      </div>
+    </div>
+
+    <div id="bloque-vivo" style="display:none">
+      <div class="info-box">
+        <strong>🎼 Música en vivo</strong>
+        No es necesario subir archivo. Recordá coordinar con la organización los detalles de la música en vivo. Las presentaciones de danza española flamenco con música en vivo tienen un límite de 8 minutos.
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>Duración de la música <span class="req">*</span></label>
+      <div class="tiempo-wrap">
+        <input type="number" id="tiempo-min" placeholder="00" min="0" max="30" style="width:70px;text-align:center;font-size:1.1rem;font-weight:700"/>
+        <span class="tiempo-sep">:</span>
+        <input type="number" id="tiempo-seg" placeholder="00" min="0" max="59" style="width:70px;text-align:center;font-size:1.1rem;font-weight:700"/>
+      </div>
+      <div class="tiempo-hint">Minutos : Segundos — Ej: 2 : 30 equivale a 2 minutos y 30 segundos</div>
+    </div>
+
+    <div class="campo">
+      <label>¿Tiene escenografía?</label>
+      <select id="tiene-esceno" onchange="toggleEsceno()">
+        <option value="no">No</option>
+        <option value="si">Sí</option>
+      </select>
+    </div>
+
+    <div id="bloque-esceno" style="display:none">
+      <div class="warn-box">
+        <strong>🎭 Escenografía — requerimientos</strong>
+        Los elementos deben ser sencillos, livianos y de rápido montaje/desmontaje. <strong>Prohibido:</strong> fuego, agua, papel picado, serpentinas, confetis, paja, plumas, materiales cortantes o punzantes. Describí en detalle: tamaño, movilidad y tiempo de montaje.
+      </div>
+      <div class="campo">
+        <label>Descripción de escenografía <span class="req">*</span></label>
+        <textarea id="esceno-desc" placeholder="Describí en detalle: tamaño, movilidad, montaje y desmontaje..."></textarea>
+      </div>
+      <div class="campo">
+        <label>Foto de los elementos escenográficos</label>
+        <div class="upload-area" id="upload-esceno-area" onclick="document.getElementById('upload-esceno').click()">
+          <div class="up-icon">📷</div>
+          <p>Subí una foto de los elementos (JPG/PNG)</p>
+          <div class="file-name" id="esceno-nombre"></div>
+        </div>
+        <input type="file" id="upload-esceno" accept="image/*" onchange="archivoSeleccionado(this,'upload-esceno-area','esceno-nombre')"/>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button type="button" class="btn-prev" onclick="irSeccion(3)">← Anterior</button>
+      <button type="button" class="btn-next" onclick="irSeccion(5)">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEC 5: COSTOS -->
+<div class="seccion" id="sec-5">
+  <div class="sec-header"><div class="num">5</div><h2>Costos y forma de pago</h2></div>
+  <div class="sec-body">
+    <div class="info-box">
+      <strong>💰 Costos de inscripción</strong>
+      La inversión se realiza por persona participante según la cantidad de integrantes y el llamado vigente. Para la habilitación de la institución, los pagos deben estar cancelados en su totalidad. <strong>No se realizarán devoluciones de ningún tipo.</strong>
+    </div>
+    <div class="llamado-card">
+      <div class="llamado-badge" id="llamado-activo-badge">1er Llamado</div>
+      <h3>Costos vigentes</h3>
+      <table>
+        <tr><td>Solistas</td><td id="c-solista"></td></tr>
+        <tr><td>Dúo, Trío, Cuarteto</td><td id="c-duo"></td></tr>
+        <tr><td>Grupo (5-10 part.)</td><td id="c-grupo"></td></tr>
+        <tr><td>Gran Grupo (+10 part.)</td><td id="c-gran"></td></tr>
+        <tr><td>Participación por Coreografía</td><td id="c-coreo"></td></tr>
+      </table>
+    </div>
+    <div class="costo-calc" id="costo-calculado" style="display:none">
+      <div class="label">Total estimado para tu inscripción</div>
+      <div class="monto" id="monto-total">—</div>
+      <div class="detalle" id="costo-detalle"></div>
+    </div>
+    <div class="campo" style="margin-top:1rem">
+      <label>Forma de pago <span class="req">*</span></label>
+      <select id="forma-pago" required onchange="toggleBanco()">
+        <option value="">— Seleccioná —</option>
+        <option value="transferencia">Transferencia bancaria</option>
+        <option value="deposito">Depósito bancario</option>
+      </select>
+    </div>
+    <div id="bloque-banco" style="display:none;margin-top:.75rem">
+      <div class="banco-card">
+        <h4 id="banco-titulo">Datos bancarios</h4>
+        <div class="banco-row"><span>Banco</span><span class="val" id="bc-banco"></span></div>
+        <div class="banco-row"><span>Cuenta Corriente</span><span class="val" id="bc-cuenta"></span></div>
+        <div class="banco-row"><span>Titular</span><span class="val" id="bc-titular"></span></div>
+        <div class="banco-row"><span>R.U.C.</span><span class="val" id="bc-ruc"></span></div>
+        <div class="banco-row" style="margin-top:.5rem;color:#6B21A8;font-size:.8rem;border:none">Podés también enviar el comprobante al WhatsApp: +595986250000 especificando a qué coreografía corresponde</div>
+      </div>
+      <div class="campo" style="margin-top:.75rem">
+        <label>Comprobante de pago <span style="color:#888;font-weight:400;font-size:.8rem">(opcional)</span></label>
+        <div class="upload-area" id="upload-comp-area" onclick="document.getElementById('upload-comp').click()">
+          <div class="up-icon">🧾</div>
+          <p>Subí la foto o captura del comprobante</p>
+          <div class="file-name" id="comp-nombre"></div>
+        </div>
+        <input type="file" id="upload-comp" accept="image/*,.pdf" onchange="archivoSeleccionado(this,'upload-comp-area','comp-nombre')"/>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button type="button" class="btn-prev" onclick="irSeccion(4)">← Anterior</button>
+      <button type="button" class="btn-next" onclick="irSeccion(6)">Revisar y confirmar ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEC 6: REGLAMENTO -->
+<div class="seccion" id="sec-6">
+  <div class="sec-header"><div class="num">6</div><h2>Reglamento y confirmación</h2></div>
+  <div class="sec-body">
+    <a class="reglamento-link" href="https://drive.google.com/file/d/1VmKmRUnKXx2nGCY0Ro3gC83ZwRp0ity8/view" target="_blank">
+      📄 Ver Reglamento Oficial PULSO 2026 (abre en nueva pestaña)
+    </a>
+    <div class="terms-box">
+      <strong>PULSO FESTIVAL INTERNACIONAL DE DANZA — REGLAMENTO 2026</strong><br><br>
+      Al inscribirse, el responsable declara conocer y aceptar el Reglamento actualizado de PULSO FESTIVAL INTERNACIONAL DE DANZA 2026.<br><br>
+      • Todo participante cede a PULSO su Derecho de Imagen para materiales fotográficos y audiovisuales.<br>
+      • Las inscripciones deben realizarse por representantes institucionales. No se aceptan correos de alumnos/familiares.<br>
+      • Una vez cubiertos los cupos se cerrarán las inscripciones.<br>
+      • Una vez realizado el pago NO se realizarán devoluciones.<br>
+      • Escenografía: elementos sencillos, livianos, rápido montaje. Prohibido fuego, agua, papel picado, materiales cortantes.<br>
+      • Acreditaciones: retirar pulseras 1 hora antes. Colocar en muñeca izquierda. Sin pulsera no se ingresa al escenario.<br>
+      • Todos los participantes aceptan estar en condiciones óptimas de salud.<br>
+      • Penalizaciones por exceso de tiempo: -0.5pt/jurado (10-30s), -1pt/jurado (30-90s), -2pt/jurado (90-180s). Más de 180s = descalificación.<br>
+      • 1 cambio de música sin costo hasta 3 días antes. 2° cambio: Gs. 50.000. Cambios 6-9 sept: Gs. 100.000 c/u.
+    </div>
+    <label class="check-row">
+      <input type="checkbox" id="acepta-reglamento"/>
+      <span>He leído y acepto el Reglamento oficial de PULSO Festival Internacional de Danza 8va Edición 2026 <span class="req">*</span></span>
+    </label>
+    <label class="check-row">
+      <input type="checkbox" id="acepta-imagen"/>
+      <span>Acepto la cesión de Derecho de Imagen para materiales fotográficos y audiovisuales del festival <span class="req">*</span></span>
+    </label>
+    <div class="nav-btns">
+      <button type="button" class="btn-prev" onclick="irSeccion(pasoActual-1)">← Anterior</button>
+      <button type="submit" class="btn-submit" id="btn-enviar">
+        <span id="btn-texto">Enviar inscripción</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+</form>
+
+<!-- ÉXITO -->
+<div class="exito" id="exito">
+  <div class="check-big">🎉</div>
+  <h2>¡Inscripción enviada!</h2>
+  <p>Recibimos tu inscripción correctamente. En breve recibirás un email de confirmación con el resumen completo.</p>
+  <p>Recordá enviar el comprobante de pago si aún no lo hiciste al WhatsApp <strong>+595986250000</strong></p>
+  <div class="id-insc" id="id-insc-display"></div>
+  <p style="margin-top:1.25rem;font-size:.8rem;color:#888">¿Consultas? <strong>pulsofestivalinternacional@gmail.com</strong><br>WhatsApp: +595986250000 · @pulsofestival_</p>
+</div>
+
+</div>
+
+<script type="text/javascript" src="formulario.js"></script>
+</body>
+</html>
+
